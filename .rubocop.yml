@@ -1,0 +1,45 @@
+inherit_gem:
+  rubocop-rails-omakase: rubocop.yml
+
+require:
+  - rubocop-rails
+  - rubocop-rspec
+
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.4
+  Exclude:
+    - "bin/**/*"
+    - "db/schema.rb"
+    - "db/cache_schema.rb"
+    - "db/queue_schema.rb"
+    - "db/cable_schema.rb"
+    - "vendor/**/*"
+    - "node_modules/**/*"
+    - "tmp/**/*"
+
+# Allow longer blocks in specs
+Metrics/BlockLength:
+  Exclude:
+    - "spec/**/*"
+    - "config/environments/*"
+    - "config/routes.rb"
+
+# Allow longer methods in migrations
+Metrics/MethodLength:
+  Max: 20
+  Exclude:
+    - "db/migrate/*"
+
+# Allow longer classes
+Metrics/ClassLength:
+  Max: 200
+
+RSpec/ExampleLength:
+  Max: 20
+
+RSpec/MultipleExpectations:
+  Max: 5
+
+RSpec/NestedGroups:
+  Max: 4

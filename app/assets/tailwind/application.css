@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  /* APRS Dark Theme Colors */
+  --color-aprs-bg: #0f172a;
+  --color-aprs-surface: #1e293b;
+  --color-aprs-surface-elevated: #334155;
+  --color-aprs-border: #475569;
+  --color-aprs-text: #f1f5f9;
+  --color-aprs-text-muted: #94a3b8;
+  --color-aprs-primary: #3b82f6;
+  --color-aprs-primary-hover: #2563eb;
+  --color-aprs-accent: #10b981;
+  --color-aprs-danger: #ef4444;
+  --color-aprs-warning: #f59e0b;
+}

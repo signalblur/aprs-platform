@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Manages the PostGIS container for local development via Apple Containers.
+# Usage: bin/db-container [start|stop|status|logs|reset]
+
+set -euo pipefail
+
+CONTAINER_NAME="aprs-postgres"
+VOLUME_NAME="aprs-pgdata"
+IMAGE="postgis/postgis:16-3.4"
+PG_USER="aprs_dev"
+PG_PASSWORD="aprs_dev_password"
+PG_DB="aprs_platform_development"
+CONTAINER_BIN="/opt/homebrew/bin/container"
+
+case "${1:-status}" in
+  start)
+    if $CONTAINER_BIN list 2>/dev/null | grep -q "$CONTAINER_NAME"; then
+      echo "Container $CONTAINER_NAME is already running."
+      exit 0
+    fi
+
+    # Try to start existing stopped container first
+    if $CONTAINER_BIN start "$CONTAINER_NAME" 2>/dev/null; then
+      echo "Started existing container $CONTAINER_NAME."
+    else
+      # Create volume if it doesn't exist
+      $CONTAINER_BIN volume create "$VOLUME_NAME" 2>/dev/null || true
+
+      # Create and start new container
+      $CONTAINER_BIN run \
+        --name "$CONTAINER_NAME" \
+        -d \
+        --platform linux/amd64 \
+        --rosetta \
+        -e POSTGRES_USER="$PG_USER" \
+        -e POSTGRES_PASSWORD="$PG_PASSWORD" \
+        -e POSTGRES_DB="$PG_DB" \
+        -e PGDATA=/var/lib/postgresql/data/pgdata \
+        -p 5432:5432 \
+        -v "$VOLUME_NAME:/var/lib/postgresql/data" \
+        "$IMAGE"
+      echo "Created and started container $CONTAINER_NAME."
+    fi
+
+    echo "Waiting for PostgreSQL to be ready..."
+    for i in $(seq 1 30); do
+      if PGPASSWORD="$PG_PASSWORD" psql -h 192.168.64.3 -U "$PG_USER" -d "$PG_DB" -c "SELECT 1;" >/dev/null 2>&1; then
+        echo "PostgreSQL is ready."
+        exit 0
+      fi
+      sleep 1
+    done
+    echo "Timed out waiting for PostgreSQL."
+    exit 1
+    ;;
+
+  stop)
+    $CONTAINER_BIN stop "$CONTAINER_NAME" 2>/dev/null && echo "Stopped $CONTAINER_NAME." || echo "Container not running."
+    ;;
+
+  status)
+    $CONTAINER_BIN list 2>/dev/null | head -1
+    $CONTAINER_BIN list 2>/dev/null | grep "$CONTAINER_NAME" || echo "Container $CONTAINER_NAME is not running."
+    ;;
+
+  logs)
+    $CONTAINER_BIN logs "$CONTAINER_NAME"
+    ;;
+
+  reset)
+    echo "This will destroy all database data. Are you sure? (y/N)"
+    read -r confirm
+    if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+      $CONTAINER_BIN stop "$CONTAINER_NAME" 2>/dev/null || true
+      $CONTAINER_BIN rm "$CONTAINER_NAME" 2>/dev/null || true
+      $CONTAINER_BIN volume rm "$VOLUME_NAME" 2>/dev/null || true
+      echo "Container and volume removed. Run 'bin/db-container start' to recreate."
+    else
+      echo "Cancelled."
+    fi
+    ;;
+
+  *)
+    echo "Usage: bin/db-container [start|stop|status|logs|reset]"
+    exit 1
+    ;;
+esac

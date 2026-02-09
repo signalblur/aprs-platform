@@ -1,0 +1,33 @@
+default: &default
+  adapter: postgis
+  encoding: unicode
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: <%= ENV.fetch("DATABASE_HOST") { "192.168.64.3" } %>
+  port: <%= ENV.fetch("DATABASE_PORT") { 5432 } %>
+  username: <%= ENV.fetch("DATABASE_USERNAME") { "aprs_dev" } %>
+  password: <%= ENV.fetch("DATABASE_PASSWORD") { "aprs_dev_password" } %>
+
+development:
+  <<: *default
+  database: aprs_platform_development
+
+test:
+  <<: *default
+  database: aprs_platform_test
+
+production:
+  primary: &primary_production
+    <<: *default
+    url: <%= ENV["DATABASE_URL"] %>
+  cache:
+    <<: *primary_production
+    database: aprs_platform_production_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    database: aprs_platform_production_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: aprs_platform_production_cable
+    migrations_paths: db/cable_migrate
