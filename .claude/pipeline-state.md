@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress.
+No feature currently in progress. Phase 1d complete and ready to commit.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -31,21 +31,33 @@ No feature currently in progress.
   - 11,240 total lines
   - README.md with metadata
   - All examples use APRS stack (Rails 8.1, Devise, Pundit, Stripe, PostGIS, Active Storage, Solid Queue)
+- [x] Phase 1c: User Auth & Registration (commit c15c90f)
+  - Devise with hardened config (paranoid, 12-char min, lockable/5, confirmable, bcrypt 12)
+  - User model with role enum (member/investigator/admin)
+  - Pundit policies: ApplicationPolicy + UserPolicy with full RBAC
+  - ApplicationController: authenticate_user!, verify_authorized, verify_policy_scoped
+  - HomeController with public root (skip_authorization documented)
+  - Devise views generated (sessions, registrations, passwords, confirmations, unlocks, mailers)
+  - 49 specs, 100% line+branch coverage, RuboCop clean, Brakeman clean
+  - 37 files changed, 1,280 lines added
 
 ## Git State
 - SSH key (ed25519) in macOS keychain — working with GitHub
 - CLAUDE.md has repo allowlist: ONLY `git@github.com:signalblur/aprs-platform.git`
 - Current branch: main
-- Uncommitted changes: Phase 1b KB files, CLAUDE.md git safety section, round table fixes
 
-## Next Phase: 1c (User Auth & Registration)
-- Install Devise, generate User model with role enum (member/investigator/admin)
-- Devise hardening: paranoid, lockable, confirmable, 12+ char passwords, stretches 12
-- Build using `/build-feature` pipeline (Agent 2 -> 3 -> 4 -> 5)
-- Depends on: Phase 1b (complete)
+- [x] Phase 1d: Shape Reference Data
+  - Shape model with name (unique, NOT NULL) + description (nullable)
+  - ShapePolicy: reads for all authenticated users, writes for admins only
+  - 25 UAP shape category seeds (idempotent via find_or_create_by!)
+  - Factory + 8 model specs + 17 policy specs = 25 new examples (74 total)
+  - 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1e (Sighting Submission Core)
+- Sighting model with PostGIS location, belongs_to :shape + :user
+- Depends on: Phase 1d (complete)
 
 ## Upcoming Phases
-- Phase 1d: Shape reference data (model + 25+ category seed)
 - Phase 1e: Sighting submission core (Sections 1-4, PostGIS location)
 - Phase 1f: Sighting effects (4 effect models, Sections 5-8)
 - Phase 1g: Evidence + Witness (Sections 9-10, Active Storage)
