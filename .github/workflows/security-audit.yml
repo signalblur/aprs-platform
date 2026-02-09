@@ -1,0 +1,125 @@
+name: Security Audit
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+        with:
+          egress-policy: audit
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@09a7688d3b55cf0e976497ff046b70949eeaccfd # v1.288.0
+        with:
+          bundler-cache: true
+      - name: Run Brakeman
+        id: brakeman
+        run: |
+          bundle exec brakeman --no-pager --format json -o brakeman-report.json 2>/dev/null
+          BRAKEMAN_EXIT=$?
+          echo "exit_code=$BRAKEMAN_EXIT" >> $GITHUB_OUTPUT
+          # Extract only warning count and categories — never log full code snippets
+          if [ -f brakeman-report.json ]; then
+            WARNINGS=$(ruby -rjson -e '
+              report = JSON.parse(File.read("brakeman-report.json"))
+              count = report["warnings"].length
+              puts count
+            ')
+            echo "warning_count=$WARNINGS" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+      - name: Run bundler-audit
+        id: bundler_audit
+        run: |
+          bundle exec bundler-audit update 2>/dev/null
+          bundle exec bundler-audit check --format json > audit-report.json 2>/dev/null
+          AUDIT_EXIT=$?
+          echo "exit_code=$AUDIT_EXIT" >> $GITHUB_OUTPUT
+          if [ -f audit-report.json ]; then
+            VULNS=$(ruby -rjson -e '
+              report = JSON.parse(File.read("audit-report.json"))
+              count = report["results"].length rescue 0
+              puts count
+            ' 2>/dev/null || echo "0")
+            echo "vuln_count=$VULNS" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+      - name: Upload security reports
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: security-reports
+          path: |
+            brakeman-report.json
+            audit-report.json
+          retention-days: 30
+      - name: Create issue if vulnerabilities found
+        if: steps.brakeman.outputs.exit_code != '0' || steps.bundler_audit.outputs.exit_code != '0'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const fs = require('fs');
+            let body = '## Security Audit Report\n\n';
+            body += '> **Note:** Full details are in CI artifacts. This issue contains only summaries to avoid leaking sensitive code patterns.\n\n';
+
+            // Brakeman: summary only, no code snippets
+            try {
+              const report = JSON.parse(fs.readFileSync('brakeman-report.json', 'utf8'));
+              const warnings = report.warnings || [];
+              body += `### Brakeman: ${warnings.length} warning(s)\n\n`;
+              if (warnings.length > 0) {
+                body += '| Severity | Type | File | Line |\n|----------|------|------|------|\n';
+                warnings.forEach(w => {
+                  // Only show file path and warning type — never code content
+                  const file = w.file || 'unknown';
+                  const type = w.warning_type || 'unknown';
+                  const confidence = w.confidence || 'unknown';
+                  const line = w.line || '?';
+                  body += `| ${confidence} | ${type} | \`${file}\` | ${line} |\n`;
+                });
+              }
+              body += '\n';
+            } catch(e) {
+              body += '### Brakeman\nReport unavailable. Check CI logs.\n\n';
+            }
+
+            // bundler-audit: gem names and advisory IDs only
+            try {
+              const report = JSON.parse(fs.readFileSync('audit-report.json', 'utf8'));
+              const results = report.results || [];
+              body += `### Bundler Audit: ${results.length} vulnerability(ies)\n\n`;
+              if (results.length > 0) {
+                body += '| Gem | Advisory | Severity | Title |\n|-----|----------|----------|-------|\n';
+                results.forEach(r => {
+                  const gem = r.gem?.name || 'unknown';
+                  const advisory = r.advisory?.id || 'unknown';
+                  const severity = r.advisory?.criticality || 'unknown';
+                  const title = r.advisory?.title || 'unknown';
+                  body += `| ${gem} | ${advisory} | ${severity} | ${title} |\n`;
+                });
+              }
+              body += '\n';
+            } catch(e) {
+              body += '### Bundler Audit\nReport unavailable. Check CI logs.\n\n';
+            }
+
+            body += '\n---\n*Full reports available as CI artifacts. Do not paste raw security scan output in public issues.*\n';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `Security Audit: Vulnerabilities Found (${new Date().toISOString().split('T')[0]})`,
+              body: body,
+              labels: ['security']
+            });
