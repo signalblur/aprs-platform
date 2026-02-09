@@ -1,0 +1,13 @@
+<div class="max-w-2xl mx-auto text-center">
+  <h1 class="text-4xl font-bold mb-4">APRS Platform</h1>
+  <p class="text-lg text-gray-600 mb-8">Anomalous Phenomena Reporting System</p>
+
+  <% if user_signed_in? %>
+    <p class="mb-4">Welcome back, <%= current_user.email %>.</p>
+  <% else %>
+    <div class="space-x-4">
+      <%= link_to "Sign In", new_user_session_path, class: "text-blue-600 hover:underline" %>
+      <%= link_to "Sign Up", new_user_registration_path, class: "text-blue-600 hover:underline" %>
+    </div>
+  <% end %>
+</div>
