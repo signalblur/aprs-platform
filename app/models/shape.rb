@@ -8,5 +8,7 @@
 # @attr [String] name the shape category name (unique, required)
 # @attr [String] description optional description of the shape category
 class Shape < ApplicationRecord
+  has_many :sightings, dependent: :restrict_with_error
+
   validates :name, presence: true, uniqueness: true
 end

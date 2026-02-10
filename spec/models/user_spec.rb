@@ -17,6 +17,10 @@ RSpec.describe User, type: :model do
     end
   end
 
+  describe "associations" do
+    it { is_expected.to have_many(:sightings).with_foreign_key(:submitter_id).dependent(:restrict_with_error).inverse_of(:submitter) }
+  end
+
   describe "Devise modules" do
     it "includes database_authenticatable" do
       expect(described_class.devise_modules).to include(:database_authenticatable)

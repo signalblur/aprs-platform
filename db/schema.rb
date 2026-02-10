@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_09_220219) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_000222) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
@@ -22,6 +22,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_220219) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_shapes_on_name", unique: true
+  end
+
+  create_table "sightings", force: :cascade do |t|
+    t.decimal "altitude_feet"
+    t.datetime "created_at", null: false
+    t.text "description", null: false
+    t.integer "duration_seconds"
+    t.geography "location", limit: {srid: 4326, type: "st_point", geographic: true}
+    t.string "media_source"
+    t.integer "num_witnesses", default: 1, null: false
+    t.timestamptz "observed_at", null: false
+    t.string "observed_timezone", null: false
+    t.bigint "shape_id", null: false
+    t.integer "status", default: 0, null: false
+    t.bigint "submitter_id"
+    t.datetime "updated_at", null: false
+    t.string "visibility_conditions"
+    t.text "weather_notes"
+    t.index ["location"], name: "index_sightings_on_location", using: :gist
+    t.index ["observed_at"], name: "index_sightings_on_observed_at"
+    t.index ["shape_id"], name: "index_sightings_on_shape_id"
+    t.index ["status"], name: "index_sightings_on_status"
+    t.index ["submitter_id"], name: "index_sightings_on_submitter_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -51,4 +74,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_09_220219) do
     t.index ["role"], name: "index_users_on_role"
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
+
+  add_foreign_key "sightings", "shapes"
+  add_foreign_key "sightings", "users", column: "submitter_id"
 end

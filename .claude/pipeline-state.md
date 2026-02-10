@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress. Phase 1d complete and ready to commit.
+No feature currently in progress. Phase 1e complete and ready to commit.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -53,13 +53,25 @@ No feature currently in progress. Phase 1d complete and ready to commit.
   - Factory + 8 model specs + 17 policy specs = 25 new examples (74 total)
   - 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1e (Sighting Submission Core)
-- Sighting model with PostGIS location, belongs_to :shape + :user
-- Depends on: Phase 1d (complete)
+- [x] Phase 1e: Sighting Submission Core
+  - Sighting model with PostGIS geography location (SRID 4326, GiST index)
+  - belongs_to :submitter (User, optional for anonymous), belongs_to :shape
+  - has_many :sightings backfilled on User (FK: submitter_id) and Shape
+  - Status enum: submitted (0), under_review (1), verified (2), rejected (3)
+  - Validations: description (20-10K chars), observed_at, observed_timezone (IANA), num_witnesses (>= 1), duration_seconds (> 0, optional)
+  - timestamptz for observed_at, observed_timezone for IANA zone
+  - Scopes: within_radius (ST_DWithin), recent, by_status, by_shape, observed_between
+  - SightingPolicy: all users read/create, submitter+admin update, admin-only destroy
+  - Anonymous sightings: only admins can update/destroy
+  - Factory with 7 traits (anonymous, under_review, verified, rejected, without_optional_fields, in_boulder, in_nyc)
+  - 63 new specs (137 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1f (Sighting Effects)
+- Four effect models (Sections 5-8)
+- Depends on: Phase 1e (complete)
 
 ## Upcoming Phases
-- Phase 1e: Sighting submission core (Sections 1-4, PostGIS location)
-- Phase 1f: Sighting effects (4 effect models, Sections 5-8)
+- Phase 1f: Sighting effects (4 effect models, Sections 5-8) ← NEXT
 - Phase 1g: Evidence + Witness (Sections 9-10, Active Storage)
 - Phase 1h: Sighting display (Leaflet map, list, show, search/filter)
 - Phase 1i: API Layer v1 (REST JSON, API keys, rate limiting)

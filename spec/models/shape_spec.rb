@@ -13,6 +13,10 @@ RSpec.describe Shape, type: :model do
     end
   end
 
+  describe "associations" do
+    it { is_expected.to have_many(:sightings).dependent(:restrict_with_error) }
+  end
+
   describe "validations" do
     subject { build(:shape) }
 

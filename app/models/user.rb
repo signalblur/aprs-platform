@@ -15,5 +15,7 @@ class User < ApplicationRecord
          :recoverable, :rememberable, :validatable,
          :trackable, :lockable, :confirmable
 
+  has_many :sightings, foreign_key: :submitter_id, dependent: :restrict_with_error, inverse_of: :submitter
+
   enum :role, { member: 0, investigator: 1, admin: 2 }, default: :member, validate: true
 end
