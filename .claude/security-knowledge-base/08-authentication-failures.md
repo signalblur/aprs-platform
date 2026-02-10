@@ -830,6 +830,63 @@ Devise.setup do |config|
 end
 ```
 
+#### Example 11: API Key Auth Bypasses Devise Account Lockout/Confirmation
+**Source:** Phase 1i security review — discovered in APRS codebase (2026-02-09)
+**Status:** [VERIFIED]
+
+**Vulnerable Code:**
+```ruby
+# app/controllers/api/v1/base_controller.rb
+# VULNERABLE: Only checks if the API key itself is usable (active + not expired).
+# Does NOT check if the owning user's account is locked or unconfirmed.
+# A locked/unconfirmed user retains full API access via pre-existing keys,
+# completely bypassing Devise's lockable and confirmable controls.
+class Api::V1::BaseController < ActionController::API
+  before_action :authenticate_api_key!
+
+  private
+
+  def authenticate_api_key!
+    raw_key = request.headers["X-Api-Key"]
+    @current_api_key = ApiKey.find_by_raw_key(raw_key)
+
+    if @current_api_key&.usable?
+      @current_user = @current_api_key.user  # User may be locked!
+      @current_api_key.touch_last_used!
+    else
+      render json: { error: "Unauthorized" }, status: :unauthorized
+    end
+  end
+end
+```
+
+**Secure Fix:**
+```ruby
+# app/controllers/api/v1/base_controller.rb
+# SECURE: Also checks the owning user's account status via Devise's
+# active_for_authentication? method, which returns false for locked
+# or unconfirmed accounts. This ensures the API respects the same
+# account lifecycle controls as the web application.
+class Api::V1::BaseController < ActionController::API
+  before_action :authenticate_api_key!
+
+  private
+
+  # @return [void]
+  def authenticate_api_key!
+    raw_key = request.headers["X-Api-Key"]
+    @current_api_key = ApiKey.find_by_raw_key(raw_key)
+
+    if @current_api_key&.usable? && @current_api_key.user.active_for_authentication?
+      @current_user = @current_api_key.user
+      @current_api_key.touch_last_used!
+    else
+      render json: { error: "Unauthorized" }, status: :unauthorized
+    end
+  end
+end
+```
+
 ## Checklist
 
 - [ ] Devise `paranoid` mode is set to `true` in `config/initializers/devise.rb`
@@ -856,3 +913,4 @@ end
 - [ ] Failed authentication attempts are logged with IP address (not password) for monitoring
 - [ ] Account lockout events are logged and alertable
 - [ ] No custom authentication logic bypasses Devise's built-in security mechanisms
+- [ ] All authentication paths (web session, API key, OAuth, JWT) check `user.active_for_authentication?` to enforce locked/unconfirmed status consistently

@@ -26,14 +26,16 @@ module Api
       # Authenticates the request via the X-Api-Key header.
       #
       # Looks up the API key by SHA256 digest and verifies it is usable
-      # (active and not expired). Sets current_user from the key owner.
+      # (active and not expired). Also checks the owning user account is
+      # active via Devise's active_for_authentication? (rejects locked
+      # and unconfirmed accounts). Sets current_user from the key owner.
       #
       # @return [void]
       def authenticate_api_key!
         raw_key = request.headers["X-Api-Key"]
         @current_api_key = ApiKey.find_by_raw_key(raw_key)
 
-        if @current_api_key&.usable?
+        if @current_api_key&.usable? && @current_api_key.user.active_for_authentication?
           @current_user = @current_api_key.user
           @current_api_key.touch_last_used!
         else

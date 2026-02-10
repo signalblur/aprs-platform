@@ -4,8 +4,9 @@ module Api
   module V1
     # Serializes Sighting records for list/index responses.
     #
-    # Includes core fields, shape as nested hash, submitter email,
-    # and location as lat/lng hash. All timestamps are ISO 8601.
+    # Includes core fields, shape as nested hash, and location as
+    # lat/lng hash. All timestamps are ISO 8601. Submitter email is
+    # intentionally excluded to prevent PII leakage to all API consumers.
     class SightingSerializer
       # @param sighting [Sighting] the sighting to serialize
       def initialize(sighting)
@@ -19,7 +20,6 @@ module Api
           description: @sighting.description,
           status: @sighting.status,
           shape: shape_hash,
-          submitter_email: @sighting.submitter&.email,
           location: location_hash,
           altitude_feet: @sighting.altitude_feet&.to_f,
           duration_seconds: @sighting.duration_seconds,

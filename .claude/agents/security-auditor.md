@@ -52,6 +52,13 @@ Output: `.claude/security-audits/<feature-name>.md`
 
 Each audit includes: feature threat surface, applicable OWASP risks, specific checks (pass/fail), Brakeman/bundler-audit results, recommendations, final verdict (APPROVED/NEEDS_REMEDIATION).
 
+### Mandatory Cross-Cutting Checks
+
+These checks apply to **every** feature that touches authentication or API responses:
+
+1. **Auth path parity:** If the feature introduces or modifies an authentication mechanism (API keys, tokens, OAuth), verify it checks `user.active_for_authentication?` to enforce locked/unconfirmed/suspended status. All auth paths must enforce the same account lifecycle controls as Devise's `authenticate_user!`.
+2. **Serializer PII audit:** If the feature adds or modifies API serializers, audit every field for PII (email, name, phone, contact_info, coordinates). Cross-check against web view output — if the web view doesn't expose it, the API shouldn't either without explicit role gating and documented justification.
+
 ## Anti-Hallucination Protocol
 
 1. Verify gems: `bundle info <gem_name>`

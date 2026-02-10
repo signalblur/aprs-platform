@@ -59,9 +59,9 @@ RSpec.describe "API v1 Sightings", type: :request do
         expect(shape_data).to eq({ "id" => shape.id, "name" => shape.name })
       end
 
-      it "includes submitter_email" do
+      it "excludes submitter_email from response" do
         get api_v1_sightings_path, headers: headers
-        expect(response.parsed_body["data"].first["submitter_email"]).to eq(user.email)
+        expect(response.parsed_body["data"].first).not_to have_key("submitter_email")
       end
 
       it "includes location as lat/lng hash" do
@@ -95,15 +95,6 @@ RSpec.describe "API v1 Sightings", type: :request do
       it "returns nil for location" do
         get api_v1_sightings_path, headers: headers
         expect(response.parsed_body["data"].first["location"]).to be_nil
-      end
-    end
-
-    context "when sighting is anonymous" do
-      before { create(:sighting, :anonymous, shape: shape) }
-
-      it "returns nil for submitter_email" do
-        get api_v1_sightings_path, headers: headers
-        expect(response.parsed_body["data"].first["submitter_email"]).to be_nil
       end
     end
 

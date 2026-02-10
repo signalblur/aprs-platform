@@ -732,6 +732,57 @@ class AdminConstraint
 end
 ```
 
+#### Example 11: API Serializer PII Over-Exposure Without Role Gating
+**Source:** Phase 1i security review — discovered in APRS codebase (2026-02-09)
+**Status:** [VERIFIED]
+
+**Vulnerable Code:**
+```ruby
+# app/serializers/api/v1/sighting_serializer.rb
+# VULNERABLE: Unconditionally exposes submitter email to ALL API consumers,
+# regardless of role. Any member can harvest all submitter emails by
+# paginating through GET /api/v1/sightings. The web views deliberately
+# omit this field, making the API inconsistent with the web's PII posture.
+# Witness contact_info is correctly gated, but submitter email is not.
+class Api::V1::SightingSerializer
+  def initialize(sighting)
+    @sighting = sighting
+  end
+
+  def as_json
+    {
+      id: @sighting.id,
+      description: @sighting.description,
+      submitter_email: @sighting.submitter&.email,  # PII leak!
+      # ... other fields
+    }
+  end
+end
+```
+
+**Secure Fix:**
+```ruby
+# app/serializers/api/v1/sighting_serializer.rb
+# SECURE: Remove PII fields that are not needed by all API consumers.
+# If certain roles (investigator/admin) need submitter identity, gate it
+# behind a policy check, consistent with how WitnessPolicy#show_contact_info?
+# gates witness PII. When in doubt, match what the web views expose.
+class Api::V1::SightingSerializer
+  def initialize(sighting)
+    @sighting = sighting
+  end
+
+  def as_json
+    {
+      id: @sighting.id,
+      description: @sighting.description,
+      # submitter_email intentionally excluded — PII not needed by all consumers
+      # ... other fields
+    }
+  end
+end
+```
+
 ## Checklist
 
 - [ ] Every controller action calls `authorize @record` (or `authorize :<model>` for collection actions)
@@ -750,3 +801,5 @@ end
 - [ ] Stripe webhook endpoints verify `Stripe-Signature` and use `skip_after_action :verify_authorized` (not `skip_authorization`) with documented justification
 - [ ] All role/tier changes are recorded in `AuditLog`
 - [ ] No controller uses `params.permit!` (permit-all)
+- [ ] API serializers do not expose PII (email, name, contact_info, coordinates) without role-based gating — cross-check against what web views expose
+- [ ] Every PII field in a serializer is gated behind a policy check (e.g., `WitnessPolicy#show_contact_info?`) or excluded entirely

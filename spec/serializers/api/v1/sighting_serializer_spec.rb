@@ -25,8 +25,8 @@ RSpec.describe Api::V1::SightingSerializer do
     expect(json[:shape]).to eq({ id: shape.id, name: shape.name })
   end
 
-  it "includes submitter_email" do
-    expect(json[:submitter_email]).to eq(user.email)
+  it "excludes submitter_email to prevent PII leakage" do
+    expect(json).not_to have_key(:submitter_email)
   end
 
   it "includes location as lat/lng hash" do
@@ -83,14 +83,6 @@ RSpec.describe Api::V1::SightingSerializer do
 
     it "returns nil for location" do
       expect(json[:location]).to be_nil
-    end
-  end
-
-  context "when submitter is nil (anonymous)" do
-    let(:sighting) { create(:sighting, :anonymous, shape: shape) }
-
-    it "returns nil for submitter_email" do
-      expect(json[:submitter_email]).to be_nil
     end
   end
 

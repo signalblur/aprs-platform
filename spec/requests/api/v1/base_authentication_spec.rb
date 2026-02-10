@@ -54,6 +54,24 @@ RSpec.describe "API v1 Authentication", type: :request do
     end
   end
 
+  describe "locked user account" do
+    let(:user) { create(:user, locked_at: Time.current) }
+
+    it "returns 401 Unauthorized" do
+      get test_path, headers: valid_headers
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
+  describe "unconfirmed user account" do
+    let(:user) { create(:user, confirmed_at: nil) }
+
+    it "returns 401 Unauthorized" do
+      get test_path, headers: valid_headers
+      expect(response).to have_http_status(:unauthorized)
+    end
+  end
+
   describe "valid API key" do
     it "returns 200" do
       create(:shape)

@@ -54,6 +54,11 @@ Cross-reference against `.claude/security-knowledge-base/`.
 - [ ] Any `skip_authorization` has inline comment explaining why
 - [ ] Policies enforce full role x tier matrix
 
+### Serializer PII Audit
+- [ ] API serializers do not expose PII (email, name, contact_info, phone, coordinates) without role-based gating
+- [ ] Every PII field in a serializer is gated behind a policy check or excluded entirely
+- [ ] API response fields are cross-checked against what web views expose — no unintentional PII divergence
+
 ### Hardcoded Secrets
 - [ ] No API keys, passwords, tokens, or secrets in source code
 - [ ] No secrets in Dockerfiles, docker-compose, or CI configs (must use `${{ secrets.* }}`)
@@ -93,6 +98,11 @@ Cross-reference against `.claude/security-knowledge-base/`.
 - [ ] `lock_strategy = :failed_attempts`, `maximum_attempts = 5`
 - [ ] `unlock_strategy = :both`
 - [ ] `reset_password_within = 2.hours`
+
+### Auth Path Parity
+- [ ] All authentication paths (web session, API key, OAuth, JWT) check `user.active_for_authentication?`
+- [ ] Locked/unconfirmed users are rejected by API key auth, not just web session auth
+- [ ] Account lifecycle controls (lockout, confirmation, suspension) are enforced consistently across all trust boundaries
 
 ### Logging & Sensitive Data
 - [ ] `config.filter_parameters` includes `:password`, `:token`, `:api_key`, `:secret`, `:stripe`
