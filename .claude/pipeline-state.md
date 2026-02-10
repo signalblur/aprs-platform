@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress. Phase 1e complete and ready to commit.
+No feature currently in progress. Phase 1f complete and ready to commit.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -66,12 +66,22 @@ No feature currently in progress. Phase 1e complete and ready to commit.
   - Factory with 7 traits (anonymous, under_review, verified, rejected, without_optional_fields, in_boulder, in_nyc)
   - 63 new specs (137 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1f (Sighting Effects)
-- Four effect models (Sections 5-8)
-- Depends on: Phase 1e (complete)
+- [x] Phase 1f: Sighting Effects (4 effect models)
+  - PhysiologicalEffect: effect_type, severity enum (mild/moderate/severe), onset, duration
+  - PsychologicalEffect: effect_type, severity enum (mild/moderate/severe), onset, duration
+  - EquipmentEffect: equipment_type, effect_type (dual string fields)
+  - EnvironmentalTrace: trace_type, PostGIS geography location, measured_value + measurement_unit
+  - All 4 models: belongs_to :sighting, Sighting has_many :X dependent(:destroy)
+  - 4 Pundit policies: read/create=all, update=submitter+admin, destroy=admin
+  - Cross-field validation on EnvironmentalTrace (measurement_unit required when measured_value present)
+  - 4 factories, 4 model specs, 4 policy specs = 133 new examples (270 total)
+  - 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1g (Evidence + Witness)
+- Evidence model with Active Storage, Witness model
+- Depends on: Phase 1f (complete)
 
 ## Upcoming Phases
-- Phase 1f: Sighting effects (4 effect models, Sections 5-8) ← NEXT
 - Phase 1g: Evidence + Witness (Sections 9-10, Active Storage)
 - Phase 1h: Sighting display (Leaflet map, list, show, search/filter)
 - Phase 1i: API Layer v1 (REST JSON, API keys, rate limiting)

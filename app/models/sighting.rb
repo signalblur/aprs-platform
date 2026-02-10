@@ -24,6 +24,11 @@ class Sighting < ApplicationRecord
   belongs_to :submitter, class_name: "User", optional: true, inverse_of: :sightings
   belongs_to :shape
 
+  has_many :physiological_effects, dependent: :destroy
+  has_many :psychological_effects, dependent: :destroy
+  has_many :equipment_effects, dependent: :destroy
+  has_many :environmental_traces, dependent: :destroy
+
   enum :status, { submitted: 0, under_review: 1, verified: 2, rejected: 3 }, default: :submitted, validate: true
 
   validates :description, presence: true, length: { minimum: 20, maximum: 10_000 }

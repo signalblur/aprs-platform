@@ -10,11 +10,58 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_10_000222) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_001929) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
+
+  create_table "environmental_traces", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.geography "location", limit: {srid: 4326, type: "st_point", geographic: true}
+    t.string "measured_value"
+    t.string "measurement_unit"
+    t.bigint "sighting_id", null: false
+    t.string "trace_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["location"], name: "index_environmental_traces_on_location", using: :gist
+    t.index ["sighting_id"], name: "index_environmental_traces_on_sighting_id"
+  end
+
+  create_table "equipment_effects", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "effect_type", null: false
+    t.string "equipment_type", null: false
+    t.bigint "sighting_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sighting_id"], name: "index_equipment_effects_on_sighting_id"
+  end
+
+  create_table "physiological_effects", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "duration"
+    t.string "effect_type", null: false
+    t.string "onset"
+    t.integer "severity", default: 0, null: false
+    t.bigint "sighting_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sighting_id"], name: "index_physiological_effects_on_sighting_id"
+  end
+
+  create_table "psychological_effects", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "duration"
+    t.string "effect_type", null: false
+    t.string "onset"
+    t.integer "severity", default: 0, null: false
+    t.bigint "sighting_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sighting_id"], name: "index_psychological_effects_on_sighting_id"
+  end
 
   create_table "shapes", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -75,6 +122,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_000222) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  add_foreign_key "environmental_traces", "sightings"
+  add_foreign_key "equipment_effects", "sightings"
+  add_foreign_key "physiological_effects", "sightings"
+  add_foreign_key "psychological_effects", "sightings"
   add_foreign_key "sightings", "shapes"
   add_foreign_key "sightings", "users", column: "submitter_id"
 end

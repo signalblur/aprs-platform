@@ -49,3 +49,8 @@ RSpec/MultipleExpectations:
 
 RSpec/NestedGroups:
   Max: 4
+
+# Policy specs for nested resources (effects → sighting → user) need
+# more memoized helpers than the default 5.
+RSpec/MultipleMemoizedHelpers:
+  Max: 7
