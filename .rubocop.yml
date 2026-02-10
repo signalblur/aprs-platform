@@ -54,3 +54,26 @@ RSpec/NestedGroups:
 # more memoized helpers than the default 5.
 RSpec/MultipleMemoizedHelpers:
   Max: 7
+
+# Rswag integration specs use string describes (path-based), quoted symbol
+# `let` for HTTP headers, dynamic `run_test!` example generation, and
+# `security [api_key: []]` DSL — all false positives for these cops.
+RSpec/DescribeClass:
+  Exclude:
+    - "spec/integration/**/*"
+
+RSpec/EmptyExampleGroup:
+  Exclude:
+    - "spec/integration/**/*"
+
+RSpec/VariableName:
+  Exclude:
+    - "spec/integration/**/*"
+
+RSpec/ScatteredSetup:
+  Exclude:
+    - "spec/integration/**/*"
+
+Layout/SpaceInsideArrayLiteralBrackets:
+  Exclude:
+    - "spec/integration/**/*"

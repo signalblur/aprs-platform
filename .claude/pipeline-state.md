@@ -121,11 +121,20 @@ No feature currently in progress. Phase 1h complete and ready to commit.
   - JSON envelope: {data: [...], meta: {page, per_page, total, total_pages}}
   - 158 new specs (557 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1j (API Documentation)
-- Rswag OpenAPI specs
+- [x] Phase 1j: API Documentation (Rswag / OpenAPI 3.0.3)
+  - Rswag initializers (rswag_api.rb, rswag_ui.rb) + Swagger UI at /api-docs
+  - spec/swagger_helper.rb: OpenAPI 3.0.3 spec with 14 component schemas (allOf composition)
+  - Security scheme: X-Api-Key (apiKey type, header)
+  - Shapes integration spec (2 examples: 200, 401)
+  - Sightings integration spec (6 examples: index 200/401, show 200 member/200 investigator/401/404)
+  - Witness PII gating documented in schema + tested with dual response examples
+  - swagger/v1/swagger.yaml generated and committed
+  - RuboCop exclusions for Rswag DSL patterns (DescribeClass, EmptyExampleGroup, VariableName, etc.)
+  - 8 new specs (565 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1k (Investigation Management)
 
 ## Upcoming Phases
-- Phase 1j: API documentation (Rswag OpenAPI specs)
 - Phase 1k: Investigation management (case assign, status, audit)
 - Phase 1l: Stripe integration (payment, membership tiers, webhooks)
 - Phase 1m: Admin dashboard (Tailwind + Chartkick)
