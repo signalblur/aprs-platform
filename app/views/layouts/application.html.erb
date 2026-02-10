@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <title><%= content_for(:title) || "Aprs Platform Bootstrap" %></title>
+    <title><%= content_for(:title) || "APRS — Anomalous Phenomena Reporting System" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Aprs Platform Bootstrap">
+    <meta name="application-name" content="APRS">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -23,9 +23,63 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
-    <main class="container mx-auto mt-28 px-5 flex">
+  <body class="bg-aprs-bg text-aprs-text min-h-screen flex flex-col antialiased">
+    <nav class="bg-aprs-surface/80 backdrop-blur-md border-b border-aprs-border/50 sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          <div class="flex items-center gap-8">
+            <%= link_to root_path, class: "flex items-center gap-2 group" do %>
+              <span class="text-xl font-bold text-aprs-primary tracking-tight group-hover:text-aprs-primary-hover transition-colors">APRS</span>
+            <% end %>
+
+            <div class="hidden sm:flex items-center gap-1">
+              <%= link_to "Home", root_path,
+                    class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path == root_path ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
+              <%= link_to "Sightings", sightings_path,
+                    class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path.start_with?('/sightings') ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <% if user_signed_in? %>
+              <span class="hidden sm:inline text-sm text-aprs-text-muted"><%= current_user.email %></span>
+              <%= button_to "Sign out", destroy_user_session_path, method: :delete,
+                    class: "px-3 py-1.5 text-sm font-medium rounded-lg border border-aprs-border/50 text-aprs-text-muted hover:text-aprs-text hover:border-aprs-border hover:bg-aprs-surface-elevated/50 transition-all cursor-pointer" %>
+            <% else %>
+              <%= link_to "Sign in", new_user_session_path,
+                    class: "px-3 py-1.5 text-sm font-medium text-aprs-text-muted hover:text-aprs-text transition-colors" %>
+              <%= link_to "Sign up", new_user_registration_path,
+                    class: "px-4 py-1.5 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors" %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <% if flash[:notice] %>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div class="rounded-lg bg-aprs-accent/10 border border-aprs-accent/30 px-4 py-3 text-sm text-aprs-accent">
+          <%= flash[:notice] %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if flash[:alert] %>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+        <div class="rounded-lg bg-aprs-danger/10 border border-aprs-danger/30 px-4 py-3 text-sm text-aprs-danger">
+          <%= flash[:alert] %>
+        </div>
+      </div>
+    <% end %>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <%= yield %>
     </main>
+
+    <footer class="border-t border-aprs-border/30 py-6 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <p class="text-center text-xs text-aprs-text-muted/60">APRS — Anomalous Phenomena Reporting System. Open source under AGPL v3.</p>
+      </div>
+    </footer>
   </body>
 </html>

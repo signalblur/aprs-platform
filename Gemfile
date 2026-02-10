@@ -45,6 +45,9 @@ gem "rswag-ui"
 gem "chartkick"
 gem "groupdate"
 
+# Pagination
+gem "pagy", "~> 9.0"
+
 # Misc
 gem "bootsnap", require: false
 gem "tzinfo-data", platforms: %i[windows jruby]

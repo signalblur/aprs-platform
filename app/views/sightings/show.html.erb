@@ -1,0 +1,274 @@
+<% content_for :head do %>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+<% end %>
+
+<% content_for :title, "Sighting ##{@sighting.id} — APRS" %>
+
+<div class="space-y-6">
+  <%# Back link %>
+  <%= link_to sightings_path, class: "inline-flex items-center gap-1.5 text-sm text-aprs-text-muted hover:text-aprs-primary transition-colors" do %>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to Sightings
+  <% end %>
+
+  <%# Header %>
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-aprs-primary/15 text-aprs-primary border border-aprs-primary/20">
+          <%= @sighting.shape.name %>
+        </span>
+        <% status_colors = { "submitted" => "aprs-warning", "under_review" => "aprs-primary", "verified" => "aprs-accent", "rejected" => "aprs-danger" } %>
+        <% color = status_colors[@sighting.status] || "aprs-text-muted" %>
+        <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-<%= color %>/10 text-<%= color %> border border-<%= color %>/20">
+          <%= @sighting.status.humanize %>
+        </span>
+      </div>
+      <div class="text-right">
+        <time class="text-sm text-aprs-text-muted" datetime="<%= @sighting.observed_at.iso8601 %>">
+          <%= @sighting.observed_at.in_time_zone(@sighting.observed_timezone).strftime("%B %d, %Y at %l:%M %p %Z") %>
+        </time>
+        <p class="text-xs text-aprs-text-muted/60 mt-0.5">Observer timezone: <%= @sighting.observed_timezone %></p>
+      </div>
+    </div>
+
+    <p class="text-aprs-text/90 leading-relaxed whitespace-pre-wrap"><%= @sighting.description %></p>
+  </div>
+
+  <%# Map %>
+  <% if @sighting.location %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 overflow-hidden">
+      <div id="sighting-map"
+           class="h-80 w-full"
+           data-controller="map"
+           data-map-geojson-value="<%= @geojson %>"
+           data-map-center-value="[<%= @sighting.location.y %>, <%= @sighting.location.x %>]"
+           data-map-zoom-value="12">
+      </div>
+    </div>
+  <% end %>
+
+  <%# Details grid %>
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <h2 class="text-lg font-semibold mb-4">Details</h2>
+    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+      <% if @sighting.duration_seconds %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Duration</dt>
+          <dd class="mt-1 text-sm"><%= distance_of_time_in_words(@sighting.duration_seconds) %></dd>
+        </div>
+      <% end %>
+
+      <% if @sighting.altitude_feet %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Altitude</dt>
+          <dd class="mt-1 text-sm"><%= number_with_delimiter(@sighting.altitude_feet.to_i) %> ft</dd>
+        </div>
+      <% end %>
+
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Witnesses</dt>
+        <dd class="mt-1 text-sm"><%= @sighting.num_witnesses %></dd>
+      </div>
+
+      <% if @sighting.visibility_conditions %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Visibility</dt>
+          <dd class="mt-1 text-sm"><%= @sighting.visibility_conditions %></dd>
+        </div>
+      <% end %>
+
+      <% if @sighting.weather_notes %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Weather</dt>
+          <dd class="mt-1 text-sm"><%= @sighting.weather_notes %></dd>
+        </div>
+      <% end %>
+
+      <% if @sighting.media_source %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Media Source</dt>
+          <dd class="mt-1 text-sm"><%= @sighting.media_source %></dd>
+        </div>
+      <% end %>
+
+      <% if @sighting.location %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Location</dt>
+          <dd class="mt-1 text-sm"><%= "%.6f" % @sighting.location.y %>, <%= "%.6f" % @sighting.location.x %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </div>
+
+  <%# Physiological Effects %>
+  <% if @sighting.physiological_effects.any? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Physiological Effects</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-aprs-border/30">
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Type</th>
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Severity</th>
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Onset</th>
+              <th class="text-left py-2 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-aprs-border/20">
+            <% @sighting.physiological_effects.each do |effect| %>
+              <tr>
+                <td class="py-2.5 pr-4 font-medium"><%= effect.effect_type %></td>
+                <td class="py-2.5 pr-4">
+                  <% severity_color = { "mild" => "aprs-accent", "moderate" => "aprs-warning", "severe" => "aprs-danger" }[effect.severity] %>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-<%= severity_color %>/10 text-<%= severity_color %>">
+                    <%= effect.severity.capitalize %>
+                  </span>
+                </td>
+                <td class="py-2.5 pr-4 text-aprs-text-muted"><%= effect.onset %></td>
+                <td class="py-2.5 text-aprs-text-muted"><%= effect.description %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Psychological Effects %>
+  <% if @sighting.psychological_effects.any? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Psychological Effects</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-aprs-border/30">
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Type</th>
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Severity</th>
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Onset</th>
+              <th class="text-left py-2 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-aprs-border/20">
+            <% @sighting.psychological_effects.each do |effect| %>
+              <tr>
+                <td class="py-2.5 pr-4 font-medium"><%= effect.effect_type %></td>
+                <td class="py-2.5 pr-4">
+                  <% severity_color = { "mild" => "aprs-accent", "moderate" => "aprs-warning", "severe" => "aprs-danger" }[effect.severity] %>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-<%= severity_color %>/10 text-<%= severity_color %>">
+                    <%= effect.severity.capitalize %>
+                  </span>
+                </td>
+                <td class="py-2.5 pr-4 text-aprs-text-muted"><%= effect.onset %></td>
+                <td class="py-2.5 text-aprs-text-muted"><%= effect.description %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Equipment Effects %>
+  <% if @sighting.equipment_effects.any? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Equipment Effects</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-aprs-border/30">
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Equipment</th>
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Effect</th>
+              <th class="text-left py-2 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-aprs-border/20">
+            <% @sighting.equipment_effects.each do |effect| %>
+              <tr>
+                <td class="py-2.5 pr-4 font-medium"><%= effect.equipment_type %></td>
+                <td class="py-2.5 pr-4"><%= effect.effect_type %></td>
+                <td class="py-2.5 text-aprs-text-muted"><%= effect.description %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Environmental Traces %>
+  <% if @sighting.environmental_traces.any? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Environmental Traces</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-aprs-border/30">
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Type</th>
+              <th class="text-left py-2 pr-4 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Measurement</th>
+              <th class="text-left py-2 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Description</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-aprs-border/20">
+            <% @sighting.environmental_traces.each do |trace| %>
+              <tr>
+                <td class="py-2.5 pr-4 font-medium"><%= trace.trace_type %></td>
+                <td class="py-2.5 pr-4 text-aprs-text-muted">
+                  <% if trace.measured_value %>
+                    <%= trace.measured_value %> <%= trace.measurement_unit %>
+                  <% else %>
+                    <span class="text-aprs-text-muted/50">&mdash;</span>
+                  <% end %>
+                </td>
+                <td class="py-2.5 text-aprs-text-muted"><%= trace.description %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Evidence %>
+  <% if @sighting.evidences.any? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Evidence</h2>
+      <div class="grid gap-3">
+        <% @sighting.evidences.each do |evidence| %>
+          <div class="flex items-start gap-3 p-3 rounded-lg bg-aprs-bg/50 border border-aprs-border/20">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-aprs-primary/10 text-aprs-primary shrink-0">
+              <%= evidence.evidence_type.humanize %>
+            </span>
+            <p class="text-sm text-aprs-text-muted"><%= evidence.description %></p>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Witnesses %>
+  <% if @sighting.witnesses.any? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Witnesses</h2>
+      <div class="grid gap-3">
+        <% @sighting.witnesses.each do |witness| %>
+          <div class="p-4 rounded-lg bg-aprs-bg/50 border border-aprs-border/20">
+            <div class="flex items-center gap-2 mb-2">
+              <span class="font-medium text-sm"><%= witness.name || "Anonymous" %></span>
+              <% if policy(witness).show_contact_info? && witness.contact_info.present? %>
+                <span class="text-xs text-aprs-text-muted">&middot; <%= witness.contact_info %></span>
+              <% end %>
+            </div>
+            <% if witness.statement.present? %>
+              <p class="text-sm text-aprs-text-muted leading-relaxed"><%= witness.statement %></p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

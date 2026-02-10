@@ -130,11 +130,19 @@ Core entity graph (Phase 1a–1g):
 - **Evidence** → belongs_to :sighting + :submitted_by (User), has_one_attached :file (Active Storage), evidence_type enum (photo/video/audio/document/other), file validations (content-type allowlist, magic byte verification, 100 MB size limit)
 - **Witness** → belongs_to :sighting, `encrypts :contact_info` (Active Record Encryption for PII), can be anonymous (nil name/contact_info)
 
+### Sighting Display (Phase 1h)
+- `SightingsController`: index (paginated list + filters + map) and show (detail + associations)
+- Pagination: Pagy gem (20 per page, overflow: `:last_page`), `include Pagy::Backend` in ApplicationController
+- Map: Leaflet 1.9.4 via Importmap, Stimulus `map_controller.js`, GeoJSON from `SightingsHelper#sightings_to_geojson`
+- Filters: status, shape_id, date range, location radius (PostGIS), text search (ILIKE + `sanitize_sql_like`)
+- Witness PII: `policy(witness).show_contact_info?` gates `contact_info` display (investigator/admin only)
+
 ### Key Infrastructure
 - Background jobs: Solid Queue (DB-backed, no Redis); also Solid Cache + Solid Cable
 - Asset pipeline: Propshaft (Rails 8 default, not Sprockets)
 - File storage: Active Storage (local in dev; DigitalOcean Spaces planned for production)
-- Frontend: Importmap + Turbo + Stimulus + Tailwind CSS
+- Frontend: Importmap + Turbo + Stimulus + Tailwind CSS + Leaflet 1.9.4
+- Pagination: Pagy ~> 9.0
 - API docs: Rswag (rswag-api, rswag-ui, rswag-specs)
 - Charts: Chartkick + Groupdate
 - Dev email: `letter_opener_web` at `/letter_opener`

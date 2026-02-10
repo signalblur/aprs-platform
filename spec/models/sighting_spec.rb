@@ -165,6 +165,28 @@ RSpec.describe Sighting, type: :model do
       end
     end
 
+    describe ".search_description" do
+      it "matches case-insensitively" do
+        sighting = create(:sighting, description: "A bright light hovered above the treeline at night")
+        create(:sighting, description: "A loud rumbling sound came from the ground below")
+
+        expect(described_class.search_description("bright")).to eq([ sighting ])
+      end
+
+      it "returns empty when no match" do
+        create(:sighting, description: "A bright light hovered above the treeline at night")
+
+        expect(described_class.search_description("submarine")).to be_empty
+      end
+
+      it "escapes SQL wildcard characters" do
+        sighting = create(:sighting, description: "Object moved at 100% speed then stopped")
+        create(:sighting, description: "Object moved at full speed then stopped here")
+
+        expect(described_class.search_description("100%")).to eq([ sighting ])
+      end
+    end
+
     describe ".within_radius" do
       let(:denver_lat) { 39.7392 }
       let(:denver_lng) { -104.9903 }

@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress. Phase 1g complete and ready to commit.
+No feature currently in progress. Phase 1h complete and ready to commit.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -93,12 +93,24 @@ No feature currently in progress. Phase 1g complete and ready to commit.
   - 100% line coverage, RuboCop clean, Brakeman clean
   - M19 (XOR sighting/investigation constraint): Deferred to Phase 1k (Investigation model required)
 
-## Next Phase: 1h (Sighting Display)
-- Sighting list, show, search/filter with Leaflet map
-- Depends on: Phase 1g (complete)
+- [x] Phase 1h: Sighting Display (List, Show, Map, Search/Filter)
+  - Pagy pagination gem (v9.4, 20 per page, overflow: :last_page)
+  - Leaflet 1.9.4 via Importmap (ESM from jspm.io) + Stimulus map controller
+  - SightingsController: index + show with Pundit, Pagy, filters
+  - Index filters: status, shape, date range, location radius, text search (ILIKE)
+  - GeoJSON helper: sightings_to_geojson with HTML-escaped popups
+  - search_description scope (ILIKE + sanitize_sql_like for SQL injection safety)
+  - Views: dark APRS theme (Tailwind), nav bar, filter form, map, sighting cards
+  - Show: detail view with all effects, evidence, witnesses (PII gated)
+  - Layout: sticky nav, flash messages, footer
+  - Deleted hello_controller.js scaffold
+  - 39 new specs (399 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1i (API Layer v1)
+- REST JSON API, API keys, rate limiting
+- Depends on: Phase 1h (complete)
 
 ## Upcoming Phases
-- Phase 1h: Sighting display (Leaflet map, list, show, search/filter)
 - Phase 1i: API Layer v1 (REST JSON, API keys, rate limiting)
 - Phase 1j: API documentation (Rswag OpenAPI specs)
 - Phase 1k: Investigation management (case assign, status, audit)

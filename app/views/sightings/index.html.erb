@@ -1,0 +1,120 @@
+<% content_for :head do %>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin="" />
+<% end %>
+
+<div class="space-y-6">
+  <%# Header %>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold">Sightings</h1>
+      <p class="text-sm text-aprs-text-muted mt-1"><%= @pagy.count %> reports on record</p>
+    </div>
+  </div>
+
+  <%# Filters %>
+  <details class="group bg-aprs-surface rounded-xl border border-aprs-border/30 overflow-hidden">
+    <summary class="px-5 py-3 cursor-pointer text-sm font-medium text-aprs-text-muted hover:text-aprs-text transition-colors select-none flex items-center justify-between">
+      <span>Filters & Search</span>
+      <svg class="w-4 h-4 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </summary>
+
+    <%= form_with url: sightings_path, method: :get, class: "px-5 pb-5 pt-2", data: { turbo_frame: "_top" } do |f| %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <%# Text search %>
+        <div class="sm:col-span-2 lg:col-span-3">
+          <label for="q" class="block text-xs font-medium text-aprs-text-muted mb-1.5">Search descriptions</label>
+          <%= f.text_field :q, value: params[:q], placeholder: "e.g. bright light, triangle...",
+                class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text placeholder-aprs-text-muted/50 focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+
+        <%# Status %>
+        <div>
+          <label for="status" class="block text-xs font-medium text-aprs-text-muted mb-1.5">Status</label>
+          <%= f.select :status, options_for_select([["All statuses", ""], "submitted", "under_review", "verified", "rejected"], params[:status]),
+                {}, class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+
+        <%# Shape %>
+        <div>
+          <label for="shape_id" class="block text-xs font-medium text-aprs-text-muted mb-1.5">Shape</label>
+          <%= f.select :shape_id, options_for_select([["All shapes", ""]] + @shapes.map { |s| [s.name, s.id] }, params[:shape_id]),
+                {}, class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+
+        <%# Date from %>
+        <div>
+          <label for="date_from" class="block text-xs font-medium text-aprs-text-muted mb-1.5">From date</label>
+          <%= f.date_field :date_from, value: params[:date_from],
+                class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+
+        <%# Date to %>
+        <div>
+          <label for="date_to" class="block text-xs font-medium text-aprs-text-muted mb-1.5">To date</label>
+          <%= f.date_field :date_to, value: params[:date_to],
+                class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+
+        <%# Location (lat/lng/radius) %>
+        <div>
+          <label for="lat" class="block text-xs font-medium text-aprs-text-muted mb-1.5">Latitude</label>
+          <%= f.text_field :lat, value: params[:lat], placeholder: "39.7392",
+                class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text placeholder-aprs-text-muted/50 focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+
+        <div>
+          <label for="lng" class="block text-xs font-medium text-aprs-text-muted mb-1.5">Longitude</label>
+          <%= f.text_field :lng, value: params[:lng], placeholder: "-104.9903",
+                class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text placeholder-aprs-text-muted/50 focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+
+        <div>
+          <label for="radius" class="block text-xs font-medium text-aprs-text-muted mb-1.5">Radius (meters)</label>
+          <%= f.text_field :radius, value: params[:radius], placeholder: "50000",
+                class: "w-full rounded-lg bg-aprs-bg border border-aprs-border/50 px-3 py-2 text-sm text-aprs-text placeholder-aprs-text-muted/50 focus:outline-none focus:ring-2 focus:ring-aprs-primary/50 focus:border-aprs-primary/50 transition-colors" %>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 mt-4 pt-4 border-t border-aprs-border/20">
+        <%= f.submit "Apply Filters",
+              class: "px-4 py-2 rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white text-sm font-medium transition-colors cursor-pointer" %>
+        <%= link_to "Clear", sightings_path,
+              class: "px-4 py-2 rounded-lg border border-aprs-border/50 text-sm font-medium text-aprs-text-muted hover:text-aprs-text hover:border-aprs-border transition-all" %>
+      </div>
+    <% end %>
+  </details>
+
+  <%# Map %>
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 overflow-hidden">
+    <div id="sightings-map"
+         class="h-80 w-full"
+         data-controller="map"
+         data-map-geojson-value="<%= @geojson %>"
+         data-map-zoom-value="4">
+    </div>
+  </div>
+
+  <%# Sighting cards %>
+  <div class="grid gap-4">
+    <% @sightings.each do |sighting| %>
+      <%= render "sighting_card", sighting_card: sighting %>
+    <% end %>
+  </div>
+
+  <% if @sightings.empty? %>
+    <div class="text-center py-12">
+      <p class="text-aprs-text-muted">No sightings found matching your criteria.</p>
+    </div>
+  <% end %>
+
+  <%# Pagination %>
+  <% if @pagy.pages > 1 %>
+    <nav class="flex items-center justify-center gap-1 pagy" aria-label="Pagination">
+      <%== pagy_nav(@pagy) %>
+    </nav>
+  <% end %>
+</div>

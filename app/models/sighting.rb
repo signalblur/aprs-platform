@@ -69,6 +69,14 @@ class Sighting < ApplicationRecord
   # @param lng [Float] longitude of the center point
   # @param meters [Numeric] radius in meters
   # @return [ActiveRecord::Relation] sightings within the radius
+  # Searches sighting descriptions using case-insensitive partial matching.
+  #
+  # @param query [String] the search term
+  # @return [ActiveRecord::Relation] sightings matching the search term
+  scope :search_description, ->(query) {
+    where("description ILIKE ?", "%#{sanitize_sql_like(query)}%")
+  }
+
   scope :within_radius, ->(lat, lng, meters) {
     where(
       "ST_DWithin(location, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?)",
