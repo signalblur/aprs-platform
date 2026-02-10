@@ -10,11 +10,39 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_10_001929) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_020001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
   enable_extension "postgis"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "environmental_traces", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -37,6 +65,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_001929) do
     t.bigint "sighting_id", null: false
     t.datetime "updated_at", null: false
     t.index ["sighting_id"], name: "index_equipment_effects_on_sighting_id"
+  end
+
+  create_table "evidences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "evidence_type", default: 0, null: false
+    t.bigint "sighting_id", null: false
+    t.bigint "submitted_by_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["sighting_id"], name: "index_evidences_on_sighting_id"
+    t.index ["submitted_by_id"], name: "index_evidences_on_submitted_by_id"
   end
 
   create_table "physiological_effects", force: :cascade do |t|
@@ -122,10 +161,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_001929) do
     t.index ["unlock_token"], name: "index_users_on_unlock_token", unique: true
   end
 
+  create_table "witnesses", force: :cascade do |t|
+    t.string "contact_info"
+    t.datetime "created_at", null: false
+    t.text "credibility_notes"
+    t.string "name"
+    t.bigint "sighting_id", null: false
+    t.text "statement"
+    t.datetime "updated_at", null: false
+    t.index ["sighting_id"], name: "index_witnesses_on_sighting_id"
+  end
+
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "environmental_traces", "sightings"
   add_foreign_key "equipment_effects", "sightings"
+  add_foreign_key "evidences", "sightings"
+  add_foreign_key "evidences", "users", column: "submitted_by_id"
   add_foreign_key "physiological_effects", "sightings"
   add_foreign_key "psychological_effects", "sightings"
   add_foreign_key "sightings", "shapes"
   add_foreign_key "sightings", "users", column: "submitter_id"
+  add_foreign_key "witnesses", "sightings"
 end

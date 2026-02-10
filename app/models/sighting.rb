@@ -28,6 +28,8 @@ class Sighting < ApplicationRecord
   has_many :psychological_effects, dependent: :destroy
   has_many :equipment_effects, dependent: :destroy
   has_many :environmental_traces, dependent: :destroy
+  has_many :evidences, dependent: :destroy
+  has_many :witnesses, dependent: :destroy
 
   enum :status, { submitted: 0, under_review: 1, verified: 2, rejected: 3 }, default: :submitted, validate: true
 

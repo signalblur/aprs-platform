@@ -117,16 +117,18 @@ bin/dev
 - **Future:** `Membership` model (Phase 1l) will add tier-based gating via `user.active_membership&.tier`
 
 ### Domain Model
-Core entity graph (Phase 1a–1f):
-- **User** → has_many :sightings (FK: `submitter_id`, `dependent: :restrict_with_error`)
+Core entity graph (Phase 1a–1g):
+- **User** → has_many :sightings (FK: `submitter_id`), has_many :evidences (FK: `submitted_by_id`) — both `dependent: :restrict_with_error`
 - **Shape** → has_many :sightings (`dependent: :restrict_with_error`) — 25 seeded UAP shape categories
 - **Sighting** → belongs_to :submitter (User, optional for anonymous), belongs_to :shape
-  - has_many :physiological_effects, :psychological_effects, :equipment_effects, :environmental_traces (all `dependent: :destroy`)
+  - has_many :physiological_effects, :psychological_effects, :equipment_effects, :environmental_traces, :evidences, :witnesses (all `dependent: :destroy`)
   - PostGIS geography `location` (SRID 4326, GiST index), `observed_at` as timestamptz + `observed_timezone` (IANA)
   - Status enum: submitted → under_review → verified / rejected
 - **PhysiologicalEffect / PsychologicalEffect** → belongs_to :sighting, severity enum (mild/moderate/severe)
 - **EquipmentEffect** → belongs_to :sighting, equipment_type + effect_type (dual string fields)
 - **EnvironmentalTrace** → belongs_to :sighting, PostGIS geography location, cross-field validation (measurement_unit required when measured_value present)
+- **Evidence** → belongs_to :sighting + :submitted_by (User), has_one_attached :file (Active Storage), evidence_type enum (photo/video/audio/document/other), file validations (content-type allowlist, magic byte verification, 100 MB size limit)
+- **Witness** → belongs_to :sighting, `encrypts :contact_info` (Active Record Encryption for PII), can be anonymous (nil name/contact_info)
 
 ### Key Infrastructure
 - Background jobs: Solid Queue (DB-backed, no Redis); also Solid Cache + Solid Cable

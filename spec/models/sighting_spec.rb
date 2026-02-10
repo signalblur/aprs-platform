@@ -36,6 +36,8 @@ RSpec.describe Sighting, type: :model do
     it { is_expected.to have_many(:psychological_effects).dependent(:destroy) }
     it { is_expected.to have_many(:equipment_effects).dependent(:destroy) }
     it { is_expected.to have_many(:environmental_traces).dependent(:destroy) }
+    it { is_expected.to have_many(:evidences).dependent(:destroy) }
+    it { is_expected.to have_many(:witnesses).dependent(:destroy) }
   end
 
   describe "validations" do

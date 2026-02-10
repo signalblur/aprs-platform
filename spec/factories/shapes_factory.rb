@@ -2,7 +2,7 @@
 
 FactoryBot.define do
   factory :shape do
-    name { Faker::Lorem.unique.word.capitalize }
+    sequence(:name) { |n| "Shape #{n}" }
     description { Faker::Lorem.sentence }
 
     trait :without_description do

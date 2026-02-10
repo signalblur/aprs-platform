@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress. Phase 1f complete and ready to commit.
+No feature currently in progress. Phase 1g complete and ready to commit.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -77,12 +77,27 @@ No feature currently in progress. Phase 1f complete and ready to commit.
   - 4 factories, 4 model specs, 4 policy specs = 133 new examples (270 total)
   - 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1g (Evidence + Witness)
-- Evidence model with Active Storage, Witness model
-- Depends on: Phase 1f (complete)
+- [x] Phase 1g: Evidence + Witness
+  - Evidence model: belongs_to :sighting + :submitted_by (User), has_one_attached :file (Active Storage)
+  - Evidence enum: photo (0), video (1), audio (2), document (3), other (4)
+  - File validations: content-type allowlist (jpeg, png, webp, mp4, mpeg, wav, pdf), magic byte verification, 100 MB size limit
+  - Witness model: belongs_to :sighting, encrypts :contact_info (Active Record Encryption)
+  - EvidencePolicy: read/create=all, update=submitter+admin, destroy=admin
+  - WitnessPolicy: read/create=all, update=sighting submitter+admin, destroy=admin, show_contact_info?=investigator+admin
+  - Active Storage installed (blobs, attachments, variant_records tables)
+  - Active Record Encryption configured (credentials + test env deterministic keys)
+  - User has_many :evidences (FK: submitted_by_id, dependent: restrict_with_error)
+  - Sighting has_many :evidences + :witnesses (dependent: destroy)
+  - Shapes factory fix: sequence-based names to avoid Faker uniqueness exhaustion
+  - 2 factories, 2 model specs, 2 policy specs = 90 new examples (360 total)
+  - 100% line coverage, RuboCop clean, Brakeman clean
+  - M19 (XOR sighting/investigation constraint): Deferred to Phase 1k (Investigation model required)
+
+## Next Phase: 1h (Sighting Display)
+- Sighting list, show, search/filter with Leaflet map
+- Depends on: Phase 1g (complete)
 
 ## Upcoming Phases
-- Phase 1g: Evidence + Witness (Sections 9-10, Active Storage)
 - Phase 1h: Sighting display (Leaflet map, list, show, search/filter)
 - Phase 1i: API Layer v1 (REST JSON, API keys, rate limiting)
 - Phase 1j: API documentation (Rswag OpenAPI specs)
