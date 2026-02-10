@@ -48,6 +48,9 @@ gem "groupdate"
 # Pagination
 gem "pagy", "~> 9.0"
 
+# Rate Limiting
+gem "rack-attack"
+
 # Misc
 gem "bootsnap", require: false
 gem "tzinfo-data", platforms: %i[windows jruby]

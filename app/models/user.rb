@@ -17,6 +17,7 @@ class User < ApplicationRecord
 
   has_many :sightings, foreign_key: :submitter_id, dependent: :restrict_with_error, inverse_of: :submitter
   has_many :evidences, foreign_key: :submitted_by_id, dependent: :restrict_with_error, inverse_of: :submitted_by
+  has_many :api_keys, dependent: :destroy
 
   enum :role, { member: 0, investigator: 1, admin: 2 }, default: :member, validate: true
 end

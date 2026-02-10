@@ -117,8 +117,8 @@ bin/dev
 - **Future:** `Membership` model (Phase 1l) will add tier-based gating via `user.active_membership&.tier`
 
 ### Domain Model
-Core entity graph (Phase 1a–1g):
-- **User** → has_many :sightings (FK: `submitter_id`), has_many :evidences (FK: `submitted_by_id`) — both `dependent: :restrict_with_error`
+Core entity graph (Phase 1a–1i):
+- **User** → has_many :sightings (FK: `submitter_id`), has_many :evidences (FK: `submitted_by_id`) — both `dependent: :restrict_with_error`; has_many :api_keys (`dependent: :destroy`)
 - **Shape** → has_many :sightings (`dependent: :restrict_with_error`) — 25 seeded UAP shape categories
 - **Sighting** → belongs_to :submitter (User, optional for anonymous), belongs_to :shape
   - has_many :physiological_effects, :psychological_effects, :equipment_effects, :environmental_traces, :evidences, :witnesses (all `dependent: :destroy`)
@@ -129,6 +129,7 @@ Core entity graph (Phase 1a–1g):
 - **EnvironmentalTrace** → belongs_to :sighting, PostGIS geography location, cross-field validation (measurement_unit required when measured_value present)
 - **Evidence** → belongs_to :sighting + :submitted_by (User), has_one_attached :file (Active Storage), evidence_type enum (photo/video/audio/document/other), file validations (content-type allowlist, magic byte verification, 100 MB size limit)
 - **Witness** → belongs_to :sighting, `encrypts :contact_info` (Active Record Encryption for PII), can be anonymous (nil name/contact_info)
+- **ApiKey** → belongs_to :user, SHA256-digested `key_digest` (unique), `key_prefix` (8 chars), `name`, `active`, `expires_at`, `last_used_at`
 
 ### Sighting Display (Phase 1h)
 - `SightingsController`: index (paginated list + filters + map) and show (detail + associations)
@@ -136,6 +137,17 @@ Core entity graph (Phase 1a–1g):
 - Map: Leaflet 1.9.4 via Importmap, Stimulus `map_controller.js`, GeoJSON from `SightingsHelper#sightings_to_geojson`
 - Filters: status, shape_id, date range, location radius (PostGIS), text search (ILIKE + `sanitize_sql_like`)
 - Witness PII: `policy(witness).show_contact_info?` gates `contact_info` display (investigator/admin only)
+
+### API Layer v1 (Phase 1i)
+- **Separate trust boundary:** `Api::V1::BaseController < ActionController::API` (no CSRF, no sessions, no views)
+- **Authentication:** X-Api-Key header → SHA256 digest lookup via `ApiKey.find_by_raw_key`; keys are never stored raw
+- **Authorization:** Reuses existing Pundit policies (SightingPolicy, ShapePolicy, WitnessPolicy)
+- **Rate limiting:** Rack::Attack — API by key prefix (300/min), unauthenticated (10/min/IP), login (5/20s/IP), password reset (5/hr/IP)
+- **Endpoints:** `GET /api/v1/sightings` (paginated, filtered), `GET /api/v1/sightings/:id` (detail + associations), `GET /api/v1/shapes` (all shapes)
+- **Serializers:** PORO serializers in `app/serializers/api/v1/` — no gems, compose via delegation
+- **Filters:** `SightingsFilterable` concern shared between web and API controllers
+- **PII gating:** Witness `contact_info` only included for investigator/admin (via `WitnessPolicy#show_contact_info?`)
+- **JSON envelope:** `{data: [...], meta: {page, per_page, total, total_pages}}`
 
 ### Key Infrastructure
 - Background jobs: Solid Queue (DB-backed, no Redis); also Solid Cache + Solid Cable
@@ -146,7 +158,7 @@ Core entity graph (Phase 1a–1g):
 - API docs: Rswag (rswag-api, rswag-ui, rswag-specs)
 - Charts: Chartkick + Groupdate
 - Dev email: `letter_opener_web` at `/letter_opener`
-- **Future:** `Api::V1::` namespace (Phase 1i)
+- Rate limiting: Rack::Attack (API, login, password reset throttles)
 
 ### Test Infrastructure
 - RSpec + FactoryBot + Shoulda Matchers + WebMock + VCR

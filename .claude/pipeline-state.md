@@ -106,12 +106,25 @@ No feature currently in progress. Phase 1h complete and ready to commit.
   - Deleted hello_controller.js scaffold
   - 39 new specs (399 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1i (API Layer v1)
-- REST JSON API, API keys, rate limiting
-- Depends on: Phase 1h (complete)
+- [x] Phase 1i: API Layer v1 (Read-Only, API Key Auth, Rate Limiting)
+  - ApiKey model: SHA256-digested keys, key_prefix for identification, active/expires_at lifecycle
+  - ApiKeyPolicy: index/create=all, show/destroy=owner+admin, scope by user/admin
+  - SightingsFilterable concern: extracted from SightingsController for web+API reuse
+  - PORO serializers: ShapeSerializer, SightingSerializer, SightingDetailSerializer (no gems)
+  - Api::V1::BaseController: inherits ActionController::API (separate trust boundary, no CSRF/sessions)
+  - API key auth via X-Api-Key header → SHA256 digest lookup → touch_last_used!
+  - Api::V1::SightingsController: index (paginated, filtered) + show (detail with all 6 associations)
+  - Api::V1::ShapesController: index (all shapes ordered by name)
+  - Witness PII gating: contact_info only for investigator/admin (WitnessPolicy#show_contact_info?)
+  - Rack::Attack rate limiting: API by key (300/min), unauthenticated (10/min), login (5/20s), password reset (5/hr)
+  - Custom 429 JSON responder
+  - JSON envelope: {data: [...], meta: {page, per_page, total, total_pages}}
+  - 158 new specs (557 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1j (API Documentation)
+- Rswag OpenAPI specs
 
 ## Upcoming Phases
-- Phase 1i: API Layer v1 (REST JSON, API keys, rate limiting)
 - Phase 1j: API documentation (Rswag OpenAPI specs)
 - Phase 1k: Investigation management (case assign, status, audit)
 - Phase 1l: Stripe integration (payment, membership tiers, webhooks)

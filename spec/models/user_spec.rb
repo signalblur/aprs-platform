@@ -20,6 +20,7 @@ RSpec.describe User, type: :model do
   describe "associations" do
     it { is_expected.to have_many(:sightings).with_foreign_key(:submitter_id).dependent(:restrict_with_error).inverse_of(:submitter) }
     it { is_expected.to have_many(:evidences).with_foreign_key(:submitted_by_id).dependent(:restrict_with_error).inverse_of(:submitted_by) }
+    it { is_expected.to have_many(:api_keys).dependent(:destroy) }
   end
 
   describe "Devise modules" do
