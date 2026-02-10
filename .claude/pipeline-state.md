@@ -4,7 +4,7 @@ No feature currently in progress. Phase 1f complete and ready to commit.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
-- [x] Phase 0: GitHub Actions CI/CD (3 workflows: ci.yml, security-audit.yml, deploy.yml)
+- [x] Phase 0: GitHub Actions CI/CD (2 workflows: ci.yml, security-audit.yml)
 - [x] Phase 0: Round table review — ALL fixable items resolved (32/32 fixes). See `.claude/reviews/round-table-review.md`
 - [x] Phase 1a: Bootstrap
   - Ruby 3.4.8 via rbenv
@@ -90,5 +90,5 @@ No feature currently in progress. Phase 1f complete and ready to commit.
 - Phase 1l: Stripe integration (payment, membership tiers, webhooks)
 - Phase 1m: Admin dashboard (Tailwind + Chartkick)
 
-## Remaining Pre-Decisions
-- C8: Open-Meteo commercial licensing — decide before Phase 2a
+## Resolved Pre-Decisions
+- C8: Open-Meteo commercial licensing — **DECIDED: No commercial-licensed products.** Weather enrichment (Open-Meteo, Visual Crossing) scrapped from Phase 2a/2b until a fully open-source alternative is available.

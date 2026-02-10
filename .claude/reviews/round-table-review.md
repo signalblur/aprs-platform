@@ -43,7 +43,7 @@ All 7 expert agents completed independent reviews of the full APRS platform arch
 - **STATUS: FIXED** — Rewritten with Chainguard Wolfi (`cgr.dev/chainguard/ruby:latest`), multi-stage, distroless runtime, nonroot UID 65532, Ruby-based HEALTHCHECK, no Thruster
 
 ### C8. Open-Meteo commercial use licensing [API Expert]
-- **STATUS: NEEDS DECISION (before Phase 2a)** — Free tier is non-commercial only
+- **STATUS: DECIDED** — No commercial-licensed products allowed. Weather enrichment (Open-Meteo, Visual Crossing) scrapped from Phase 2a/2b until a fully open-source alternative is available.
 
 ### C9. ADSB.lol historical data is file dumps, not queryable API [API Expert]
 - **STATUS: FIXED** — API Expert updated with live API endpoints vs historical file dump distinction
@@ -132,8 +132,8 @@ All 7 expert agents completed independent reviews of the full APRS platform arch
 | M18 | Sighting status transition matrix not enumerated | Test Reviewer | 1e | Deferred |
 | M19 | Evidence XOR validation needs 4 explicit test cases | Test Reviewer | 1g | Deferred |
 | M20 | Devise extra settings (sign_in_after_reset, reconfirmable) not in Builder/Code Reviewer | Code Reviewer | 1c | Deferred |
-| M21 | Weather data mapping gaps (moon_phase, twilight, precipitation type) | API Expert | 2a | Deferred |
-| M22 | Unit conversion not documented (Celsius to F, km/h to mph) | API Expert | 2a | Deferred |
+| M21 | ~~Weather data mapping gaps (moon_phase, twilight, precipitation type)~~ | API Expert | 2a | Scrapped (C8) |
+| M22 | ~~Unit conversion not documented (Celsius to F, km/h to mph)~~ | API Expert | 2a | Scrapped (C8) |
 | M23 | Per-API rate limiter pattern not defined | API Expert | 2a | Deferred |
 | M24 | Retryable vs non-retryable HTTP error distinction not documented | API Expert | 2a | Deferred |
 
@@ -211,11 +211,11 @@ All 7 expert agents completed independent reviews of the full APRS platform arch
 - **Phase 1h:** Pagination conventions, N+1 prevention
 - **Phase 1i:** CORS, API response format, API key timing oracle
 - **Phase 1l:** Stripe webhook patterns, StripeWebhookEvent columns, subscription tests, webhook IP allowlisting
-- **Phase 2a:** API rate limiters, weather data mapping, VCR management, JSONB validation, unit conversions, retryable errors, military_check field
+- **Phase 2a:** API rate limiters, VCR management, JSONB validation, retryable errors, military_check field (weather data mapping + unit conversions scrapped per C8 decision)
 - **Phase 2c:** SGP4 verification, CelesTrak error handling
 - **Phase 2d:** ISS API redundancy evaluation
 - **Phase 2g:** Visible Planets reliability evaluation
 - **Phase 3:** DO app spec, .env.example, error tracking, FactoryBot lint
 
-### Decisions Still Needed
-- **C8:** Open-Meteo commercial licensing — decide before Phase 2a
+### Decisions Resolved
+- **C8:** Open-Meteo commercial licensing — **DECIDED:** No commercial-licensed products. Weather enrichment scrapped until open-source alternative found.

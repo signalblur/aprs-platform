@@ -76,7 +76,7 @@ bin/dev
 - Unified JSON structured logging via `Rails.logger`
 - No PII in logs
 - Specific exception classes, rescue specific exceptions
-- Filter sensitive params from logs: password, token, key, api_key, secret, stripe, name, first_name, last_name, contact_info, phone, latitude, longitude
+- Filter sensitive params from logs (currently configured: password, password_confirmation, token, api_key, key, secret, stripe, stripe_customer_id, stripe_subscription_id). **TODO:** add PII filters: name, first_name, last_name, contact_info, phone, latitude, longitude
 
 ## Security Non-Negotiables
 - Pundit `authorize` in EVERY controller action (enforced by `after_action :verify_authorized, except: :index`)
@@ -86,13 +86,11 @@ bin/dev
 - Parameterized queries ONLY (never string interpolation in SQL)
 - File uploads: validate content-type AND magic bytes
 - `force_ssl` in production
-- CSP headers enabled
+- CSP headers: initializer exists but is currently commented out — enable before production
 - Rate limit auth + submission endpoints
 - Devise: paranoid mode ON, password min 12 chars, lockable after 5 attempts, bcrypt stretches 12+
-- Stripe webhook: verify `Stripe-Signature`, store event IDs (idempotency), re-fetch data from API, use pessimistic locks on Membership updates
-- API controllers (`Api::V1::BaseController`) skip CSRF, authenticate via API key header instead
 - Web controllers MUST have CSRF protection enabled
-- Never trust webhook payloads for authorization decisions — always re-fetch from Stripe API
+- **Future (Stripe/API — not yet implemented):** Stripe webhook must verify `Stripe-Signature`, store event IDs (idempotency), re-fetch data from API, use pessimistic locks on Membership updates. API controllers (`Api::V1::BaseController`) skip CSRF, authenticate via API key header. Never trust webhook payloads for authorization decisions.
 - No `skip_authorization` without documented justification
 
 ## PostGIS Conventions
@@ -115,15 +113,30 @@ bin/dev
 ### User Model & Roles
 - `User` uses Devise modules: `database_authenticatable`, `registerable`, `recoverable`, `rememberable`, `validatable`, `trackable`, `lockable`, `confirmable`
 - Role enum: `member` (0, default), `investigator` (1), `admin` (2)
-- Payment tiers: determined by `Membership` model only — no tier duplication on User
-- Pundit policies check both: `user.role` for role gates, `user.active_membership&.tier` for tier gates
+- Pundit policies check `user.role` for role gates
+- **Future:** `Membership` model (Phase 1l) will add tier-based gating via `user.active_membership&.tier`
+
+### Domain Model
+Core entity graph (Phase 1a–1f):
+- **User** → has_many :sightings (FK: `submitter_id`, `dependent: :restrict_with_error`)
+- **Shape** → has_many :sightings (`dependent: :restrict_with_error`) — 25 seeded UAP shape categories
+- **Sighting** → belongs_to :submitter (User, optional for anonymous), belongs_to :shape
+  - has_many :physiological_effects, :psychological_effects, :equipment_effects, :environmental_traces (all `dependent: :destroy`)
+  - PostGIS geography `location` (SRID 4326, GiST index), `observed_at` as timestamptz + `observed_timezone` (IANA)
+  - Status enum: submitted → under_review → verified / rejected
+- **PhysiologicalEffect / PsychologicalEffect** → belongs_to :sighting, severity enum (mild/moderate/severe)
+- **EquipmentEffect** → belongs_to :sighting, equipment_type + effect_type (dual string fields)
+- **EnvironmentalTrace** → belongs_to :sighting, PostGIS geography location, cross-field validation (measurement_unit required when measured_value present)
 
 ### Key Infrastructure
-- Background jobs: Solid Queue (DB-backed, no Redis)
-- File storage: Active Storage + DigitalOcean Spaces
-- API versioning: `Api::V1::` namespace
+- Background jobs: Solid Queue (DB-backed, no Redis); also Solid Cache + Solid Cable
+- Asset pipeline: Propshaft (Rails 8 default, not Sprockets)
+- File storage: Active Storage (local in dev; DigitalOcean Spaces planned for production)
 - Frontend: Importmap + Turbo + Stimulus + Tailwind CSS
+- API docs: Rswag (rswag-api, rswag-ui, rswag-specs)
+- Charts: Chartkick + Groupdate
 - Dev email: `letter_opener_web` at `/letter_opener`
+- **Future:** `Api::V1::` namespace (Phase 1i)
 
 ### Test Infrastructure
 - RSpec + FactoryBot + Shoulda Matchers + WebMock + VCR
@@ -132,7 +145,7 @@ bin/dev
 - SimpleCov configured in `spec/rails_helper.rb` with 100% line minimum
 
 ### CI/CD
-- GitHub Actions: `ci.yml` (RSpec + RuboCop + Brakeman + bundler-audit + importmap audit), `security-audit.yml`, `deploy.yml`
+- GitHub Actions: `ci.yml` (RSpec + RuboCop + Brakeman + bundler-audit + importmap audit), `security-audit.yml`
 - All CI steps use pinned action SHAs and `step-security/harden-runner`
 
 ## Dockerfile Hardening (for Agent 6)

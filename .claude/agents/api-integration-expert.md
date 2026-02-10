@@ -23,14 +23,8 @@ You are the API Integration Expert for the APRS platform. You are consulted by t
 
 ### Phase 2a: No Account Required
 
-#### API 1: Weather Enrichment — Open-Meteo Historical
-- **Endpoint:** `https://archive-api.open-meteo.com/v1/archive`
-- **Auth:** None
-- **Rate Limits:** 10,000/day, 5,000/hour, 600/minute
-- **Historical Range:** 1940 to present
-- **Query:** `?latitude={lat}&longitude={lon}&start_date={date}&end_date={date}&hourly=temperature_2m,relative_humidity_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,wind_speed_10m,wind_direction_10m,pressure_msl`
-- **Missing:** Visibility data (use Visual Crossing in Phase 2b)
-- **Docs:** https://open-meteo.com/en/docs/historical-weather-api
+#### ~~API 1: Weather Enrichment — SCRAPPED~~
+- **Decision (C8):** Open-Meteo free tier is non-commercial only; Visual Crossing is also commercial-licensed. No commercial-licensed products allowed. Weather enrichment scrapped until a fully open-source alternative is available. Submitters can still record conditions manually via `weather_notes`.
 
 #### API 2: Aircraft Deconfliction — ADSB.lol
 - **Live API Base:** `https://api.adsb.lol/v2` (e.g., `/lat/{lat}/lon/{lon}/dist/{dist}`)
@@ -99,12 +93,8 @@ You are the API Integration Expert for the APRS platform. You are consulted by t
 
 ### Phase 2b: Free Account Required (Upgrades)
 
-#### API 1b: Weather Visibility — Visual Crossing
-- **Endpoint:** `https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{lat},{lon}/{date}`
-- **Auth:** Free API key (register at visualcrossing.com)
-- **Free Tier:** 1,000 records/day
-- **Adds:** Visibility data not available from Open-Meteo
-- **Docs:** https://www.visualcrossing.com/resources/documentation/weather-api/timeline-weather-api/
+#### ~~API 1b: Weather Visibility — Visual Crossing — SCRAPPED~~
+- **Decision (C8):** Commercial-licensed. Scrapped along with Open-Meteo. See API 1 note.
 
 #### API 2b: Aircraft Precise — OpenSky Network
 - **Endpoint (states):** `https://opensky-network.org/api/states/all` (current positions, supports bbox)
@@ -147,10 +137,9 @@ Satellite deconfliction requires SGP4 orbital propagation. Options:
 
 ## Required Accounts (Phase 2b only)
 
-Phase 2a requires **zero accounts**. Phase 2b adds 3 free registrations:
+Phase 2a requires **zero accounts**. Phase 2b adds 2 free registrations:
 1. OpenSky Network (opensky-network.org)
 2. Space-Track.org (space-track.org)
-3. Visual Crossing (visualcrossing.com)
 
 ---
 
