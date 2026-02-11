@@ -1,0 +1,72 @@
+<% content_for(:title) { "API Key: #{@api_key.name} — APRS" } %>
+
+<div class="space-y-6">
+  <%= link_to api_keys_path, class: "inline-flex items-center gap-1.5 text-sm text-aprs-text-muted hover:text-aprs-primary transition-colors" do %>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to API Keys
+  <% end %>
+
+  <% if flash[:raw_key] %>
+    <div class="rounded-lg bg-aprs-warning/10 border border-aprs-warning/30 px-4 py-4">
+      <h3 class="text-sm font-semibold text-aprs-warning mb-2">Your API key (shown only once):</h3>
+      <div class="flex items-center gap-2">
+        <code class="flex-1 text-sm bg-aprs-bg border border-aprs-border/50 rounded px-3 py-2 font-mono break-all" data-raw-key><%= flash[:raw_key] %></code>
+      </div>
+      <p class="text-xs text-aprs-warning/80 mt-2">Copy this key now. It will not be shown again.</p>
+    </div>
+  <% end %>
+
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-aprs-text"><%= @api_key.name %></h1>
+      <% if @api_key.usable? %>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-aprs-accent/10 text-aprs-accent border border-aprs-accent/20">Active</span>
+      <% elsif @api_key.expired? %>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-aprs-warning/10 text-aprs-warning border border-aprs-warning/20">Expired</span>
+      <% else %>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-aprs-danger/10 text-aprs-danger border border-aprs-danger/20">Inactive</span>
+      <% end %>
+    </div>
+
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Prefix</dt>
+        <dd class="mt-1 text-sm"><code class="bg-aprs-bg px-1.5 py-0.5 rounded"><%= @api_key.key_prefix %>...</code></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Owner</dt>
+        <dd class="mt-1 text-sm"><%= @api_key.user.email %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Created</dt>
+        <dd class="mt-1 text-sm"><%= @api_key.created_at.strftime("%B %d, %Y at %l:%M %p") %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Last Used</dt>
+        <dd class="mt-1 text-sm"><%= @api_key.last_used_at ? time_ago_in_words(@api_key.last_used_at) + " ago" : "Never" %></dd>
+      </div>
+      <% if @api_key.expires_at %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Expires</dt>
+          <dd class="mt-1 text-sm"><%= @api_key.expires_at.strftime("%B %d, %Y at %l:%M %p") %></dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <% if policy(@api_key).destroy? %>
+      <div class="mt-6 pt-4 border-t border-aprs-border/30">
+        <%= button_to "Revoke Key", api_key_path(@api_key), method: :delete,
+              class: "px-4 py-2 text-sm font-medium rounded-lg border border-aprs-danger/50 text-aprs-danger hover:bg-aprs-danger/10 transition-colors cursor-pointer",
+              data: { turbo_confirm: "Revoke this API key? This cannot be undone." } %>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wider mb-3">Usage</h2>
+    <p class="text-sm text-aprs-text-muted mb-2">Include your API key in the <code class="bg-aprs-bg px-1 py-0.5 rounded text-xs">X-Api-Key</code> header:</p>
+    <pre class="text-xs bg-aprs-bg border border-aprs-border/50 rounded-lg px-4 py-3 overflow-x-auto"><code>curl -H "X-Api-Key: YOUR_KEY" <%= request.base_url %>/api/v1/sightings</code></pre>
+  </div>
+</div>

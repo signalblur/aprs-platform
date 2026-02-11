@@ -40,6 +40,12 @@ module AprsPlatform
       password password_confirmation token api_key key secret
     ]
 
+    # Filter PII from logs
+    config.filter_parameters += %i[
+      name first_name last_name contact_info phone
+      latitude longitude
+    ]
+
     # Store times in UTC
     config.time_zone = "UTC"
     config.active_record.default_timezone = :utc

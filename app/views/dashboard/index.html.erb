@@ -1,0 +1,75 @@
+<% content_for(:title) { "Admin Dashboard — APRS" } %>
+
+<div class="space-y-8">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-aprs-text">Admin Dashboard</h1>
+  </div>
+
+  <%# Summary Cards %>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-4">
+      <p class="text-xs text-aprs-text-muted uppercase tracking-wide">Total Sightings</p>
+      <p class="text-2xl font-bold text-aprs-primary mt-1"><%= @stats[:total_sightings] %></p>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-4">
+      <p class="text-xs text-aprs-text-muted uppercase tracking-wide">Total Users</p>
+      <p class="text-2xl font-bold text-aprs-accent mt-1"><%= @stats[:total_users] %></p>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-4">
+      <p class="text-xs text-aprs-text-muted uppercase tracking-wide">Open Investigations</p>
+      <p class="text-2xl font-bold text-aprs-warning mt-1"><%= @stats[:open_investigations] %></p>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-4">
+      <p class="text-xs text-aprs-text-muted uppercase tracking-wide">Active Memberships</p>
+      <p class="text-2xl font-bold text-aprs-text mt-1"><%= @stats[:active_memberships] %></p>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-4">
+      <p class="text-xs text-aprs-text-muted uppercase tracking-wide">Total Evidence</p>
+      <p class="text-2xl font-bold text-aprs-text mt-1"><%= @stats[:total_evidence] %></p>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-4">
+      <p class="text-xs text-aprs-text-muted uppercase tracking-wide">Active API Keys</p>
+      <p class="text-2xl font-bold text-aprs-text mt-1"><%= @stats[:active_api_keys] %></p>
+    </div>
+  </div>
+
+  <%# Timeline Charts %>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">Sightings Over Time</h2>
+      <%= line_chart @charts[:sightings_over_time], colors: ["#6366f1"], library: { scales: { x: { ticks: { color: "#94a3b8" } }, y: { ticks: { color: "#94a3b8" } } } } %>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">User Growth</h2>
+      <%= line_chart @charts[:user_growth], colors: ["#22d3ee"], library: { scales: { x: { ticks: { color: "#94a3b8" } }, y: { ticks: { color: "#94a3b8" } } } } %>
+    </div>
+  </div>
+
+  <%# Breakdown Charts %>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">Sightings by Status</h2>
+      <%= pie_chart @charts[:sightings_by_status], donut: true, colors: ["#6366f1", "#f59e0b", "#22c55e", "#ef4444"] %>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">Users by Role</h2>
+      <%= pie_chart @charts[:users_by_role], donut: true, colors: ["#94a3b8", "#f59e0b", "#ef4444"] %>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">Memberships by Tier</h2>
+      <%= pie_chart @charts[:memberships_by_tier], donut: true, colors: ["#94a3b8", "#6366f1", "#22d3ee"] %>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">Investigations by Status</h2>
+      <%= pie_chart @charts[:investigations_by_status], donut: true, colors: ["#f59e0b", "#3b82f6", "#22c55e", "#94a3b8", "#ef4444"] %>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">Evidence by Type</h2>
+      <%= pie_chart @charts[:evidence_by_type], donut: true, colors: ["#6366f1", "#ec4899", "#f59e0b", "#22c55e", "#94a3b8"] %>
+    </div>
+    <div class="bg-aprs-surface border border-aprs-border/50 rounded-xl p-6">
+      <h2 class="text-sm font-semibold text-aprs-text-muted uppercase tracking-wide mb-4">Top Shapes</h2>
+      <%= bar_chart @charts[:top_shapes], colors: ["#6366f1"], library: { scales: { x: { ticks: { color: "#94a3b8" } }, y: { ticks: { color: "#94a3b8" } } } } %>
+    </div>
+  </div>
+</div>

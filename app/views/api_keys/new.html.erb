@@ -1,0 +1,44 @@
+<% content_for(:title) { "Create API Key — APRS" } %>
+
+<div class="space-y-6">
+  <%= link_to api_keys_path, class: "inline-flex items-center gap-1.5 text-sm text-aprs-text-muted hover:text-aprs-primary transition-colors" do %>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to API Keys
+  <% end %>
+
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6 max-w-lg">
+    <h1 class="text-2xl font-bold text-aprs-text mb-6">Create API Key</h1>
+
+    <%= form_with model: @api_key, class: "space-y-4" do |f| %>
+      <% if @api_key.errors.any? %>
+        <div class="rounded-lg bg-aprs-danger/10 border border-aprs-danger/30 px-4 py-3">
+          <h3 class="text-sm font-medium text-aprs-danger"><%= pluralize(@api_key.errors.count, "error") %> prevented this key from being created:</h3>
+          <ul class="mt-2 text-sm text-aprs-danger list-disc pl-5">
+            <% @api_key.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div>
+        <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Name</label>
+        <%= f.text_field :name,
+              class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+              placeholder: "e.g. Production, Development, CI" %>
+      </div>
+
+      <div>
+        <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Expires At (optional)</label>
+        <%= f.datetime_local_field :expires_at,
+              class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+      </div>
+
+      <div>
+        <%= f.submit "Create Key", class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors cursor-pointer" %>
+      </div>
+    <% end %>
+  </div>
+</div>

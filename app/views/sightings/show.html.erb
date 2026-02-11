@@ -244,21 +244,67 @@
   <% end %>
 
   <%# Evidence %>
-  <% if @sighting.evidences.any? %>
-    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
-      <h2 class="text-lg font-semibold mb-4">Evidence</h2>
-      <div class="grid gap-3">
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <h2 class="text-lg font-semibold mb-4">Evidence</h2>
+    <% if @sighting.evidences.any? %>
+      <div class="grid gap-3 mb-6">
         <% @sighting.evidences.each do |evidence| %>
-          <div class="flex items-start gap-3 p-3 rounded-lg bg-aprs-bg/50 border border-aprs-border/20">
-            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-aprs-primary/10 text-aprs-primary shrink-0">
-              <%= evidence.evidence_type.humanize %>
-            </span>
-            <p class="text-sm text-aprs-text-muted"><%= evidence.description %></p>
+          <div class="flex items-center justify-between gap-3 p-3 rounded-lg bg-aprs-bg/50 border border-aprs-border/20">
+            <div class="flex items-start gap-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-aprs-primary/10 text-aprs-primary shrink-0">
+                <%= evidence.evidence_type.humanize %>
+              </span>
+              <div>
+                <p class="text-sm text-aprs-text-muted"><%= evidence.description %></p>
+                <% if evidence.file.attached? %>
+                  <p class="text-xs text-aprs-text-muted/60 mt-1"><%= evidence.file.filename %> (<%= number_to_human_size(evidence.file.byte_size) %>)</p>
+                <% end %>
+              </div>
+            </div>
+            <% if policy(evidence).destroy? %>
+              <%= button_to "Remove", sighting_evidence_path(@sighting, evidence), method: :delete,
+                    class: "text-xs text-aprs-danger hover:text-aprs-danger/80 transition-colors cursor-pointer",
+                    data: { turbo_confirm: "Remove this evidence?" } %>
+            <% end %>
           </div>
         <% end %>
       </div>
-    </div>
-  <% end %>
+    <% else %>
+      <p class="text-sm text-aprs-text-muted mb-6">No evidence uploaded yet.</p>
+    <% end %>
+
+    <% if policy(Evidence.new(sighting: @sighting)).create? %>
+      <div class="border-t border-aprs-border/30 pt-4">
+        <h3 class="text-sm font-medium text-aprs-text-muted mb-3">Upload Evidence</h3>
+        <%= form_with model: Evidence.new, url: sighting_evidences_path(@sighting), class: "space-y-3" do |f| %>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Type</label>
+              <%= f.select :evidence_type,
+                    Evidence.evidence_types.keys.map { |t| [t.humanize, t] },
+                    {},
+                    class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">File</label>
+              <%= f.file_field :file,
+                    accept: Evidence::ALLOWED_CONTENT_TYPES.join(","),
+                    class: "w-full text-sm file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-aprs-primary/10 file:text-aprs-primary hover:file:bg-aprs-primary/20 file:cursor-pointer" %>
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Description (optional)</label>
+            <%= f.text_field :description,
+                  class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+                  placeholder: "Brief description of the evidence" %>
+          </div>
+          <div>
+            <%= f.submit "Upload", class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors cursor-pointer" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 
   <%# Witnesses %>
   <% if @sighting.witnesses.any? %>

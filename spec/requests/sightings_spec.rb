@@ -4,6 +4,7 @@ require "rails_helper"
 
 RSpec.describe "Sightings" do
   let(:user) { create(:user) }
+  let(:admin) { create(:user, :admin) }
   let(:shape) { create(:shape) }
 
   describe "GET /sightings" do
@@ -257,6 +258,217 @@ RSpec.describe "Sightings" do
         get sighting_path(sighting)
 
         expect(response.body).to include("FeatureCollection")
+      end
+    end
+  end
+
+  describe "GET /sightings/new" do
+    context "when unauthenticated" do
+      it "redirects to sign in" do
+        get new_sighting_path
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context "when authenticated" do
+      before { sign_in user }
+
+      it "returns success" do
+        get new_sighting_path
+        expect(response).to have_http_status(:ok)
+      end
+
+      it "shows the submission form" do
+        get new_sighting_path
+        expect(response.body).to include("Report a Sighting")
+      end
+    end
+  end
+
+  describe "POST /sightings" do
+    let(:valid_params) do
+      {
+        sighting: {
+          shape_id: shape.id,
+          description: "A bright triangular craft hovered silently over the field for several minutes",
+          observed_at: 1.day.ago.iso8601,
+          observed_timezone: "America/Denver",
+          num_witnesses: 2,
+          latitude: "39.7392",
+          longitude: "-104.9903",
+          duration_seconds: 300,
+          altitude_feet: 5000,
+          visibility_conditions: "Clear skies",
+          weather_notes: "No wind",
+          media_source: "Phone camera"
+        }
+      }
+    end
+
+    context "when unauthenticated" do
+      it "redirects to sign in" do
+        post sightings_path, params: valid_params
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context "when authenticated" do
+      before { sign_in user }
+
+      it "creates a sighting with valid params" do
+        expect {
+          post sightings_path, params: valid_params
+        }.to change(Sighting, :count).by(1)
+        expect(response).to redirect_to(sighting_path(Sighting.last))
+      end
+
+      it "sets the submitter to the current user" do
+        post sightings_path, params: valid_params
+        expect(Sighting.last.submitter).to eq(user)
+      end
+
+      it "sets status to submitted" do
+        post sightings_path, params: valid_params
+        expect(Sighting.last.status).to eq("submitted")
+      end
+
+      it "converts latitude and longitude to a PostGIS point" do
+        post sightings_path, params: valid_params
+        sighting = Sighting.last
+        expect(sighting.location).to be_present
+        expect(sighting.location.y).to be_within(0.001).of(39.7392)
+        expect(sighting.location.x).to be_within(0.001).of(-104.9903)
+      end
+
+      it "creates sighting without location when lat/lng are blank" do
+        params = valid_params.deep_dup
+        params[:sighting][:latitude] = ""
+        params[:sighting][:longitude] = ""
+        post sightings_path, params: params
+        expect(Sighting.last.location).to be_nil
+      end
+
+      it "renders new on invalid params" do
+        post sightings_path, params: { sighting: { description: "short", observed_at: "" } }
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+
+      it "does not allow setting status on create" do
+        params = valid_params.deep_dup
+        params[:sighting][:status] = "verified"
+        post sightings_path, params: params
+        expect(Sighting.last.status).to eq("submitted")
+      end
+    end
+
+    context "when tier limit is reached" do
+      before do
+        sign_in user
+        5.times { create(:sighting, submitter: user) }
+      end
+
+      it "redirects with unauthorized" do
+        post sightings_path, params: valid_params
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "GET /sightings/:id/edit" do
+    context "when unauthenticated" do
+      it "redirects to sign in" do
+        sighting = create(:sighting, submitter: user)
+        get edit_sighting_path(sighting)
+        expect(response).to redirect_to(new_user_session_path)
+      end
+    end
+
+    context "when authenticated as the submitter" do
+      before { sign_in user }
+
+      it "returns success" do
+        sighting = create(:sighting, submitter: user)
+        get edit_sighting_path(sighting)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when authenticated as admin" do
+      before { sign_in admin }
+
+      it "returns success" do
+        sighting = create(:sighting, submitter: user)
+        get edit_sighting_path(sighting)
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context "when authenticated as another user" do
+      it "redirects with unauthorized" do
+        other = create(:user)
+        sign_in other
+        sighting = create(:sighting, submitter: user)
+        get edit_sighting_path(sighting)
+        expect(response).to redirect_to(root_path)
+      end
+    end
+  end
+
+  describe "PATCH /sightings/:id" do
+    context "when authenticated as the submitter" do
+      before { sign_in user }
+
+      it "updates the sighting" do
+        sighting = create(:sighting, submitter: user)
+        patch sighting_path(sighting), params: {
+          sighting: { description: "Updated description with enough characters to pass validation" }
+        }
+        expect(response).to redirect_to(sighting_path(sighting))
+        expect(sighting.reload.description).to eq("Updated description with enough characters to pass validation")
+      end
+
+      it "does not allow submitter to change status" do
+        sighting = create(:sighting, submitter: user)
+        patch sighting_path(sighting), params: { sighting: { status: "verified" } }
+        expect(sighting.reload.status).to eq("submitted")
+      end
+
+      it "updates location when latitude and longitude are provided" do
+        sighting = create(:sighting, submitter: user)
+        patch sighting_path(sighting), params: {
+          sighting: { latitude: "40.0150", longitude: "-105.2705" }
+        }
+        sighting.reload
+        expect(sighting.location.y).to be_within(0.001).of(40.0150)
+        expect(sighting.location.x).to be_within(0.001).of(-105.2705)
+      end
+
+      it "renders edit on invalid params" do
+        sighting = create(:sighting, submitter: user)
+        patch sighting_path(sighting), params: { sighting: { description: "short" } }
+        expect(response).to have_http_status(:unprocessable_content)
+      end
+    end
+
+    context "when authenticated as admin" do
+      before { sign_in admin }
+
+      it "allows admin to change status" do
+        sighting = create(:sighting, submitter: user)
+        patch sighting_path(sighting), params: { sighting: { status: "verified" } }
+        expect(sighting.reload.status).to eq("verified")
+      end
+    end
+
+    context "when authenticated as another user" do
+      it "redirects with unauthorized" do
+        other = create(:user)
+        sign_in other
+        sighting = create(:sighting, submitter: user)
+        patch sighting_path(sighting), params: {
+          sighting: { description: "Unauthorized update attempt for this sighting" }
+        }
+        expect(response).to redirect_to(root_path)
       end
     end
   end

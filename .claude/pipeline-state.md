@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress. Phase 1l complete, ready for Phase 1m.
+All pre-production phases (1a–1q) complete. 963 examples, 100% coverage.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -160,10 +160,43 @@ No feature currently in progress. Phase 1l complete, ready for Phase 1m.
   - Security KB updated: Stripe examples retained as reference patterns
   - 119 new specs (898 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1m
+- [x] Phase 1m: Admin Dashboard
+  - DashboardController: admin-only, DashboardPolicy
+  - Chartkick 5.x + Chart.js via importmap (chartkick.js, Chart.bundle.js)
+  - Summary cards: total sightings, users, open investigations, active memberships, evidence, API keys
+  - Charts: sightings over time, user growth, sightings by status, users by role, memberships by tier, investigations by status, evidence by type, top shapes
+  - Admin-gated nav link
+  - 16 new specs (914 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Upcoming Phases
-- Phase 1m: Admin dashboard (Tailwind + Chartkick)
+- [x] Phase 1n: Sighting Submission Forms
+  - SightingsController extended: new/create/edit/update actions
+  - Form partial with all 11 sighting fields + shape dropdown + lat/lng inputs
+  - Lat/lng → PostGIS point via build_location helper
+  - Separate strong params: create_params (no status), submitter_update_params (no status), admin_update_params (includes status)
+  - "Report Sighting" button on index, tier-limit gated
+  - 22 new specs (936 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+- [x] Phase 1o: Evidence Upload UI
+  - EvidencesController nested under sightings (create/destroy)
+  - Upload form embedded in sighting show view
+  - Admin-only delete buttons, tier-limit gated create
+  - File type validation tested (unsupported content type → redirect with alert)
+  - 8 new specs (944 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+- [x] Phase 1p: API Key Management UI
+  - ApiKeysController: index/new/create/show/destroy
+  - Raw key shown once via flash after creation (never stored)
+  - Policy-scoped: users see own keys, admins see all
+  - Show page with usage instructions (curl example)
+  - Nav link for all authenticated users
+  - 19 new specs (963 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+- [x] Phase 1q: CSP Headers + PII Log Filters
+  - CSP initializer enabled: default-src self, script nonces, CDN allowances
+  - PII log filters added: name, first_name, last_name, contact_info, phone, latitude, longitude
+  - CLAUDE.md updated with new architecture sections
+
+## All pre-production phases complete. Ready for deployment planning.
 
 ## Resolved Pre-Decisions
 - C8: Open-Meteo commercial licensing — **DECIDED: No commercial-licensed products.** Weather enrichment (Open-Meteo, Visual Crossing) scrapped from Phase 2a/2b until a fully open-source alternative is available.

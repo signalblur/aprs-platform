@@ -4,8 +4,13 @@ Rails.application.routes.draw do
   mount Rswag::Ui::Engine => "/api-docs"
   mount Rswag::Api::Engine => "/api-docs"
 
-  resources :sightings, only: %i[index show]
+  get "dashboard", to: "dashboard#index"
 
+  resources :sightings, only: %i[index show new create edit update] do
+    resources :evidences, only: %i[create destroy]
+  end
+
+  resources :api_keys, only: %i[index new create show destroy]
   resources :memberships, only: %i[index show edit update]
   resources :users, only: [] do
     resources :memberships, only: %i[new create], controller: "memberships"

@@ -1,0 +1,114 @@
+<%= form_with model: sighting, class: "space-y-6" do |f| %>
+  <% if sighting.errors.any? %>
+    <div class="rounded-lg bg-aprs-danger/10 border border-aprs-danger/30 px-4 py-3">
+      <h3 class="text-sm font-medium text-aprs-danger"><%= pluralize(sighting.errors.count, "error") %> prevented this sighting from being saved:</h3>
+      <ul class="mt-2 text-sm text-aprs-danger list-disc pl-5">
+        <% sighting.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Shape</label>
+    <%= f.select :shape_id,
+          options_from_collection_for_select(shapes, :id, :name, sighting.shape_id),
+          { prompt: "Select a shape..." },
+          class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Description</label>
+    <%= f.text_area :description, rows: 5,
+          class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+          placeholder: "Describe what you observed in detail (minimum 20 characters)" %>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Observed At</label>
+      <%= f.datetime_local_field :observed_at,
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Observer Timezone</label>
+      <%= f.select :observed_timezone,
+            ActiveSupport::TimeZone::MAPPING.values.sort.map { |tz| [tz, tz] },
+            { selected: sighting.observed_timezone },
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Number of Witnesses</label>
+      <%= f.number_field :num_witnesses, min: 1,
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Duration (seconds)</label>
+      <%= f.number_field :duration_seconds, min: 1,
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+            placeholder: "Optional" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Altitude (feet)</label>
+      <%= f.number_field :altitude_feet, min: 0, step: "any",
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+            placeholder: "Optional" %>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Latitude</label>
+      <% lat_value = sighting.location ? sighting.location.y : nil %>
+      <%= f.number_field :latitude, value: lat_value, step: "any", min: -90, max: 90,
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+            placeholder: "e.g. 39.7392" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Longitude</label>
+      <% lng_value = sighting.location ? sighting.location.x : nil %>
+      <%= f.number_field :longitude, value: lng_value, step: "any", min: -180, max: 180,
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+            placeholder: "e.g. -104.9903" %>
+    </div>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Visibility Conditions</label>
+    <%= f.text_field :visibility_conditions,
+          class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+          placeholder: "e.g. Clear skies, light fog (optional)" %>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Weather Notes</label>
+    <%= f.text_field :weather_notes,
+          class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+          placeholder: "e.g. No wind, dry conditions (optional)" %>
+  </div>
+
+  <div>
+    <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Media Source</label>
+    <%= f.text_field :media_source,
+          class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+          placeholder: "e.g. Phone camera, DSLR (optional)" %>
+  </div>
+
+  <% if show_status && current_user.admin? %>
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Status</label>
+      <%= f.select :status,
+            options_for_select(Sighting.statuses.keys.map { |s| [s.humanize, s] }, sighting.status),
+            {},
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.submit class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors cursor-pointer" %>
+  </div>
+<% end %>

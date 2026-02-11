@@ -40,7 +40,11 @@
               <% if user_signed_in? %>
                 <%= link_to "Investigations", investigations_path,
                       class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path.start_with?('/investigations') ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
+                <%= link_to "API Keys", api_keys_path,
+                      class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path.start_with?('/api_keys') ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
                 <% if current_user.admin? %>
+                  <%= link_to "Dashboard", dashboard_path,
+                        class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path == '/dashboard' ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
                   <%= link_to "Memberships", memberships_path,
                         class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path.start_with?('/memberships') ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
                 <% end %>

@@ -79,7 +79,7 @@ bin/dev
 - Unified JSON structured logging via `Rails.logger`
 - No PII in logs
 - Specific exception classes, rescue specific exceptions
-- Filter sensitive params from logs (currently configured: password, password_confirmation, token, api_key, key, secret). **TODO:** add PII filters: name, first_name, last_name, contact_info, phone, latitude, longitude
+- Filter sensitive params from logs (configured: password, password_confirmation, token, api_key, key, secret, name, first_name, last_name, contact_info, phone, latitude, longitude)
 
 ## Security Non-Negotiables
 - Pundit `authorize` in EVERY controller action (enforced by `after_action :verify_authorized, except: :index`)
@@ -89,7 +89,7 @@ bin/dev
 - Parameterized queries ONLY (never string interpolation in SQL)
 - File uploads: validate content-type AND magic bytes
 - `force_ssl` in production
-- CSP headers: initializer exists but is currently commented out — enable before production
+- CSP headers: enabled with nonces for scripts; allows unpkg (Leaflet CSS), ga.jspm.io (Leaflet JS), tile.openstreetmap.org (map tiles)
 - Rate limit auth + submission endpoints
 - Devise: paranoid mode ON, password min 12 chars, lockable after 5 attempts, bcrypt stretches 12+
 - Web controllers MUST have CSRF protection enabled
@@ -163,6 +163,33 @@ Core entity graph (Phase 1a–1l):
 - **Web:** `MembershipsController` — admin-only index/create/edit/update. Non-admins view own only. Create nested under users. Deactivates existing on new assignment.
 - **API:** `GET /api/v1/membership` (singular) — returns user's tier + limits hash. Always returns data (free defaults if no membership).
 - **Audit trail:** Tier changes create new memberships (old deactivated). `granted_by`, `notes`, `starts_at`, `expires_at`.
+
+### Admin Dashboard (Phase 1m)
+- `DashboardController` — admin-only, summary stats + Chartkick/Groupdate charts
+- Charts: sightings over time, user growth, sightings by status, users by role, memberships by tier, investigations by status, evidence by type, top shapes
+- Chartkick 5.x + Chart.js via importmap (`chartkick.js`, `Chart.bundle.js`)
+
+### Sighting Submission (Phase 1n)
+- `SightingsController` extended with `new`/`create`/`edit`/`update` actions
+- Separate strong params: `create_params` (no status), `submitter_update_params` (no status), `admin_update_params` (includes status)
+- Lat/lng form fields → PostGIS point via `build_location` helper
+- Tier-limited: `SightingPolicy#create?` checks monthly count
+
+### Evidence Upload (Phase 1o)
+- `EvidencesController` nested under sightings (`/sightings/:id/evidences`)
+- Create + destroy only. Upload form embedded in sighting show view.
+- Tier-limited: `EvidencePolicy#create?` checks per-sighting count
+- File validation: content-type allowlist + magic byte verification + 100 MB size limit
+
+### API Key Management (Phase 1p)
+- `ApiKeysController` — index/new/create/show/destroy for all authenticated users
+- Raw key shown once via flash after creation (never stored)
+- Policy-scoped: users see own keys, admins see all
+- Tier-limited: `ApiKeyPolicy#create?` checks active key count
+
+### Security Hardening (Phase 1q)
+- CSP headers enabled with nonces for scripts
+- PII log filters: name, first_name, last_name, contact_info, phone, latitude, longitude
 
 ### Key Infrastructure
 - Background jobs: Solid Queue (DB-backed, no Redis); also Solid Cache + Solid Cable

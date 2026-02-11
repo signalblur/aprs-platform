@@ -11,6 +11,10 @@
       <h1 class="text-2xl font-bold">Sightings</h1>
       <p class="text-sm text-aprs-text-muted mt-1"><%= @pagy.count %> reports on record</p>
     </div>
+    <% if policy(Sighting).create? %>
+      <%= link_to "Report Sighting", new_sighting_path,
+            class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors" %>
+    <% end %>
   </div>
 
   <%# Filters %>
