@@ -58,6 +58,8 @@ These checks apply to **every** feature that touches authentication or API respo
 
 1. **Auth path parity:** If the feature introduces or modifies an authentication mechanism (API keys, tokens, OAuth), verify it checks `user.active_for_authentication?` to enforce locked/unconfirmed/suspended status. All auth paths must enforce the same account lifecycle controls as Devise's `authenticate_user!`.
 2. **Serializer PII audit:** If the feature adds or modifies API serializers, audit every field for PII (email, name, phone, contact_info, coordinates). Cross-check against web view output — if the web view doesn't expose it, the API shouldn't either without explicit role gating and documented justification.
+3. **Role-based strong params:** If the feature has a controller where multiple roles can call `update`, verify it uses **separate strong parameter methods per role** (e.g., `admin_update_params` vs `investigator_update_params`). A single shared `permit()` is a privilege escalation vector — lower-privilege users can modify fields (status, assignment, classification) that should be admin-only. Cross-check: the form partial must also gate admin-only fields with `if current_user.admin?`. Reference pattern: `SightingsController` uses `admin_update_params` vs `submitter_update_params`.
+4. **Transactional integrity for state transitions:** If the feature deactivates-then-creates (e.g., membership tier changes, API key rotation), verify the sequence is wrapped in `ActiveRecord::Base.transaction` with a row lock (`lock!`) to prevent TOCTOU race conditions. The database unique index is a backstop, not a substitute for application-level atomicity.
 
 ## Anti-Hallucination Protocol
 

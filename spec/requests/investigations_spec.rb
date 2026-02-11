@@ -280,14 +280,39 @@ RSpec.describe "Investigations" do
     end
 
     context "when authenticated as assigned investigator" do
-      it "updates the investigation" do
+      before { sign_in investigator }
+
+      it "updates permitted fields (description, findings)" do
         investigation = create(:investigation, assigned_investigator: investigator)
-        sign_in investigator
         patch investigation_path(investigation), params: {
-          investigation: { status: "in_progress" }
+          investigation: { description: "Updated by investigator", findings: "New findings" }
         }
         expect(response).to redirect_to(investigation_path(investigation))
-        expect(investigation.reload.status).to eq("in_progress")
+        investigation.reload
+        expect(investigation.description).to eq("Updated by investigator")
+        expect(investigation.findings).to eq("New findings")
+      end
+
+      it "ignores admin-only fields (status, priority, classification, assigned_investigator_id)" do
+        other_investigator = create(:user, :investigator)
+        investigation = create(:investigation,
+                               assigned_investigator: investigator,
+                               status: :open,
+                               priority: :low)
+        patch investigation_path(investigation), params: {
+          investigation: {
+            status: "closed",
+            priority: "critical",
+            classification: "hoax",
+            assigned_investigator_id: other_investigator.id
+          }
+        }
+        expect(response).to redirect_to(investigation_path(investigation))
+        investigation.reload
+        expect(investigation.status).to eq("open")
+        expect(investigation.priority).to eq("low")
+        expect(investigation.classification).to be_nil
+        expect(investigation.assigned_investigator).to eq(investigator)
       end
     end
 

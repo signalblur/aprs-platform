@@ -23,49 +23,51 @@
             placeholder: "Optional description" %>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <div>
-        <%= f.label :status, class: "block text-sm font-medium mb-1" %>
-        <%= f.select :status, Investigation.statuses.keys.map { |s| [s.humanize, s] },
-              {}, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
-      </div>
-
-      <div>
-        <%= f.label :priority, class: "block text-sm font-medium mb-1" %>
-        <%= f.select :priority, Investigation.priorities.keys.map { |p| [p.capitalize, p] },
-              {}, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
-      </div>
-
-      <div>
-        <%= f.label :classification, class: "block text-sm font-medium mb-1" %>
-        <%= f.select :classification, Investigation.classifications.keys.map { |c| [c.humanize, c] },
-              { include_blank: "Not classified" },
-              class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <div>
-        <%= f.label :assigned_investigator_id, "Assigned Investigator", class: "block text-sm font-medium mb-1" %>
-        <%= f.select :assigned_investigator_id,
-              User.where(role: [:investigator, :admin]).order(:email).map { |u| [u.email, u.id] },
-              { include_blank: "Unassigned" },
-              class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
-      </div>
-
-      <div>
-        <%= f.label :opened_at, class: "block text-sm font-medium mb-1" %>
-        <%= f.datetime_local_field :opened_at, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
-      </div>
-    </div>
-
-    <% if investigation.closed? || investigation.persisted? %>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <% if current_user.admin? %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div>
-          <%= f.label :closed_at, class: "block text-sm font-medium mb-1" %>
-          <%= f.datetime_local_field :closed_at, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+          <%= f.label :status, class: "block text-sm font-medium mb-1" %>
+          <%= f.select :status, Investigation.statuses.keys.map { |s| [s.humanize, s] },
+                {}, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+        </div>
+
+        <div>
+          <%= f.label :priority, class: "block text-sm font-medium mb-1" %>
+          <%= f.select :priority, Investigation.priorities.keys.map { |p| [p.capitalize, p] },
+                {}, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+        </div>
+
+        <div>
+          <%= f.label :classification, class: "block text-sm font-medium mb-1" %>
+          <%= f.select :classification, Investigation.classifications.keys.map { |c| [c.humanize, c] },
+                { include_blank: "Not classified" },
+                class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
         </div>
       </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <%= f.label :assigned_investigator_id, "Assigned Investigator", class: "block text-sm font-medium mb-1" %>
+          <%= f.select :assigned_investigator_id,
+                User.where(role: [:investigator, :admin]).order(:email).map { |u| [u.email, u.id] },
+                { include_blank: "Unassigned" },
+                class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+        </div>
+
+        <div>
+          <%= f.label :opened_at, class: "block text-sm font-medium mb-1" %>
+          <%= f.datetime_local_field :opened_at, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+        </div>
+      </div>
+
+      <% if investigation.closed? || investigation.persisted? %>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <%= f.label :closed_at, class: "block text-sm font-medium mb-1" %>
+            <%= f.datetime_local_field :closed_at, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+          </div>
+        </div>
+      <% end %>
     <% end %>
 
     <div>

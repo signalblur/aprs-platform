@@ -39,6 +39,7 @@ class MembershipsController < ApplicationController
   end
 
   # Creates a new membership for a user, deactivating any existing active one.
+  # Wrapped in a transaction with row lock to prevent race conditions.
   #
   # @return [void]
   def create
@@ -48,13 +49,16 @@ class MembershipsController < ApplicationController
     @membership.granted_by = current_user
     authorize @membership
 
-    deactivate_existing_membership(@user)
-
-    if @membership.save
-      redirect_to @membership, notice: "Membership assigned successfully."
-    else
-      render :new, status: :unprocessable_content
+    ActiveRecord::Base.transaction do
+      deactivate_existing_membership(@user)
+      if @membership.save
+        redirect_to @membership, notice: "Membership assigned successfully."
+      else
+        raise ActiveRecord::Rollback
+      end
     end
+
+    render :new, status: :unprocessable_content unless @membership.persisted?
   end
 
   # Renders the edit membership form.
@@ -101,11 +105,16 @@ class MembershipsController < ApplicationController
   end
 
   # Deactivates any existing active membership for the user.
+  # Uses lock! to prevent concurrent deactivation race conditions.
   #
   # @param user [User] the user whose active membership to deactivate
   # @return [void]
   def deactivate_existing_membership(user)
-    user.active_membership&.update!(active: false)
+    existing = user.active_membership
+    return unless existing
+
+    existing.lock!
+    existing.update!(active: false)
   end
 
   # Applies query filters from params to the membership relation.

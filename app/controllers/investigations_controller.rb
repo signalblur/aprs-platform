@@ -54,11 +54,15 @@ class InvestigationsController < ApplicationController
 
   # Updates an existing investigation.
   #
+  # Uses role-based strong params: admins can modify all fields,
+  # assigned investigators can only update description and findings.
+  #
   # @return [void]
   def update
     authorize @investigation
+    permitted = current_user.admin? ? admin_update_params : investigator_update_params
 
-    if @investigation.update(investigation_params)
+    if @investigation.update(permitted)
       redirect_to @investigation, notice: "Investigation updated successfully."
     else
       render :edit, status: :unprocessable_content
@@ -103,7 +107,8 @@ class InvestigationsController < ApplicationController
     @investigation = Investigation.find(params[:id])
   end
 
-  # Permitted parameters for investigation create/update.
+  # Permitted parameters for admin investigation create and update.
+  # Admins can modify all fields including assignment and status.
   #
   # @return [ActionController::Parameters]
   def investigation_params
@@ -111,6 +116,22 @@ class InvestigationsController < ApplicationController
       :title, :description, :status, :priority, :classification,
       :findings, :assigned_investigator_id, :opened_at, :closed_at
     )
+  end
+
+  # Permitted parameters for admin updates (all fields).
+  #
+  # @return [ActionController::Parameters]
+  def admin_update_params
+    investigation_params
+  end
+
+  # Permitted parameters for assigned investigator updates.
+  # Investigators can only modify description and findings — not status,
+  # priority, classification, assignment, or timeline fields.
+  #
+  # @return [ActionController::Parameters]
+  def investigator_update_params
+    params.require(:investigation).permit(:description, :findings)
   end
 
   # Applies query filters from params to the investigation relation.

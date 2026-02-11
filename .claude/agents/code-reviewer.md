@@ -81,15 +81,6 @@ Cross-reference against `.claude/security-knowledge-base/`.
 - [ ] `config.force_ssl = true` in production
 - [ ] HSTS headers configured
 
-### Stripe Webhook Security
-- [ ] `Stripe-Signature` verified via `Stripe::Webhook.construct_event`
-- [ ] Raw request body used (not parsed params)
-- [ ] 300-second tolerance
-- [ ] Event IDs stored for idempotency (`StripeWebhookEvent`)
-- [ ] Processing async via Solid Queue
-- [ ] Subscription data re-fetched from Stripe API
-- [ ] Membership updates use `with_lock`
-
 ### Devise Configuration
 - [ ] `paranoid = true`
 - [ ] `password_length = 12..128`
@@ -103,6 +94,16 @@ Cross-reference against `.claude/security-knowledge-base/`.
 - [ ] All authentication paths (web session, API key, OAuth, JWT) check `user.active_for_authentication?`
 - [ ] Locked/unconfirmed users are rejected by API key auth, not just web session auth
 - [ ] Account lifecycle controls (lockout, confirmation, suspension) are enforced consistently across all trust boundaries
+
+### Role-Based Strong Parameters
+- [ ] Controllers where multiple roles can call `update` use separate strong param methods per role
+- [ ] Admin-only fields (status, assignment, classification, priority, timestamps) are NOT permitted for non-admin users
+- [ ] Form partials gate admin-only fields with `if current_user.admin?` to match server-side restrictions
+- [ ] Reference pattern: `SightingsController` (`admin_update_params` vs `submitter_update_params`)
+
+### Transactional Integrity
+- [ ] Deactivate-then-create sequences (membership, API key rotation) are wrapped in `transaction` with row `lock!`
+- [ ] Database unique indexes are treated as backstops, not substitutes for application-level atomicity
 
 ### Logging & Sensitive Data
 - [ ] `config.filter_parameters` includes `:password`, `:token`, `:api_key`, `:secret`, `:stripe`
