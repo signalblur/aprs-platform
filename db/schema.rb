@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_10_222440) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_11_013645) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
@@ -125,6 +125,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_222440) do
     t.index ["status"], name: "index_investigations_on_status"
   end
 
+  create_table "memberships", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.timestamptz "expires_at"
+    t.bigint "granted_by_id"
+    t.text "notes"
+    t.timestamptz "starts_at", null: false
+    t.integer "tier", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["granted_by_id"], name: "index_memberships_on_granted_by_id"
+    t.index ["user_id", "active"], name: "index_memberships_on_user_id_and_active"
+    t.index ["user_id"], name: "index_memberships_on_user_id"
+    t.index ["user_id"], name: "index_memberships_one_active_per_user", unique: true, where: "(active = true)"
+  end
+
   create_table "physiological_effects", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.text "description"
@@ -232,6 +248,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_222440) do
   add_foreign_key "investigation_notes", "investigations"
   add_foreign_key "investigation_notes", "users", column: "author_id"
   add_foreign_key "investigations", "users", column: "assigned_investigator_id"
+  add_foreign_key "memberships", "users"
+  add_foreign_key "memberships", "users", column: "granted_by_id"
   add_foreign_key "physiological_effects", "sightings"
   add_foreign_key "psychological_effects", "sightings"
   add_foreign_key "sightings", "investigations"

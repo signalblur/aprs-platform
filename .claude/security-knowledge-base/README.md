@@ -34,4 +34,6 @@ This knowledge base is consumed by:
 
 ## Stack Covered
 
-All examples use: Rails 8.1, Devise, Pundit, Stripe, PostGIS, Active Storage, Solid Queue, PostgreSQL 16+, Chainguard Wolfi containers.
+All examples use: Rails 8.1, Devise, Pundit, PostGIS, Active Storage, Solid Queue, PostgreSQL 16+, Chainguard Wolfi containers.
+
+**Note:** Stripe was removed from the project in Phase 1l (memberships are admin-assigned, not payment-gated). Stripe examples in the KB files are retained as reference patterns for webhook verification, idempotency, and payment integration security — applicable to any future payment provider.

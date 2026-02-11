@@ -112,6 +112,31 @@ paths:
             application/json:
               schema:
                 "$ref": "#/components/schemas/ErrorResponse"
+  "/api/v1/membership":
+    get:
+      summary: Returns the current user's membership tier and limits
+      tags:
+      - Membership
+      security:
+      - api_key: []
+      responses:
+        '200':
+          description: professional tier (active membership)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    "$ref": "#/components/schemas/Membership"
+                required:
+                - data
+        '401':
+          description: unauthorized — missing or invalid API key
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ErrorResponse"
   "/api/v1/shapes":
     get:
       summary: Lists all UAP shape categories
@@ -698,3 +723,53 @@ components:
         required:
         - description
         - sightings
+    TierLimits:
+      type: object
+      properties:
+        sightings_per_month:
+          type: integer
+          nullable: true
+          example: 5
+          description: Max sightings per month. Null = unlimited.
+        evidence_per_sighting:
+          type: integer
+          example: 3
+        evidence_max_size_mb:
+          type: integer
+          example: 50
+        api_keys:
+          type: integer
+          example: 1
+      required:
+      - sightings_per_month
+      - evidence_per_sighting
+      - evidence_max_size_mb
+      - api_keys
+    Membership:
+      type: object
+      description: Current user's membership tier and limits.
+      properties:
+        tier:
+          type: string
+          enum:
+          - free
+          - professional
+          - organization
+          example: free
+        active:
+          type: boolean
+          example: false
+        starts_at:
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        limits:
+          "$ref": "#/components/schemas/TierLimits"
+      required:
+      - tier
+      - active
+      - limits

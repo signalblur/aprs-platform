@@ -41,7 +41,7 @@ class InvestigationsController < ApplicationController
     if @investigation.save
       redirect_to @investigation, notice: "Investigation created successfully."
     else
-      render :new, status: :unprocessable_entity
+      render :new, status: :unprocessable_content
     end
   end
 
@@ -61,7 +61,7 @@ class InvestigationsController < ApplicationController
     if @investigation.update(investigation_params)
       redirect_to @investigation, notice: "Investigation updated successfully."
     else
-      render :edit, status: :unprocessable_entity
+      render :edit, status: :unprocessable_content
     end
   end
 

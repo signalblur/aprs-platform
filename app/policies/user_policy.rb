@@ -5,7 +5,7 @@
 # Admins have full CRUD access to all users.
 # Members and investigators can only view and update their own record.
 #
-# @note Phase 1l will add tier checks via user.active_membership&.tier
+# @note Tier checks are available via user.tier (delegates to active_membership)
 class UserPolicy < ApplicationPolicy
   # Determines if the user can list all users.
   #

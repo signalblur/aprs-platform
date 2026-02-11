@@ -1,0 +1,11 @@
+<% content_for :title, "New Membership — #{@user.email} — APRS" %>
+
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold">Assign Membership to <%= @user.email %></h1>
+
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <%= render "form", membership: @membership,
+                       form_url: user_memberships_path(@user),
+                       show_tier_field: true %>
+  </div>
+</div>

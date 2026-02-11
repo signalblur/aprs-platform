@@ -26,9 +26,14 @@ class SightingPolicy < ApplicationPolicy
 
   # Determines if the user can create a new sighting.
   #
-  # @return [Boolean] true for all authenticated users
+  # Checks tier-based monthly sighting limit. Admins bypass all limits.
+  #
+  # @return [Boolean] true if within tier limit
   def create?
-    true
+    current_month_count = user.sightings.where(
+      created_at: Time.current.beginning_of_month..Time.current.end_of_month
+    ).count
+    user.within_tier_limit?(:sightings_per_month, current_month_count)
   end
 
   # Determines if the user can update a sighting.

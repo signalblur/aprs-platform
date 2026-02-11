@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress. Phase 1k complete, ready for Phase 1l.
+No feature currently in progress. Phase 1l complete, ready for Phase 1m.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -145,10 +145,24 @@ No feature currently in progress. Phase 1k complete, ready for Phase 1l.
   - Rswag: InvestigationSummary, InvestigationDetail, InvestigationNote schemas + integration specs
   - 214 new specs (779 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1l (Stripe Integration)
+- [x] Phase 1l: Membership Tiers (Admin-Assigned) + Stripe Cleanup
+  - Stripe gem + all Stripe references permanently removed from codebase
+  - Membership model: tier enum (free/professional/organization), granted_by FK, notes, starts_at/expires_at, active
+  - Partial unique index: one active membership per user at DB level
+  - TierLimits concern: LIMITS hash, tier/tier_limit/within_tier_limit? methods on User
+  - Tier gating: SightingPolicy#create?, EvidencePolicy#create?, ApiKeyPolicy#create? enforce limits
+  - MembershipPolicy: admin CRUD, non-admin own-only show, no destroy (deactivate instead)
+  - MembershipsController: admin-gated index/new/create/edit/update, user show for own
+  - Api::V1::MembershipsController: GET /api/v1/membership (singular) — tier + limits for current user
+  - Api::V1::MembershipSerializer: tier, active, starts_at, expires_at, limits hash
+  - Rswag: Membership + TierLimits schemas, integration spec (3 examples)
+  - Views: index/show/form/new/edit with Tailwind, admin-gated nav link
+  - Security KB updated: Stripe examples retained as reference patterns
+  - 119 new specs (898 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1m
 
 ## Upcoming Phases
-- Phase 1l: Stripe integration (payment, membership tiers, webhooks)
 - Phase 1m: Admin dashboard (Tailwind + Chartkick)
 
 ## Resolved Pre-Decisions

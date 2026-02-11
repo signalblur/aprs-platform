@@ -23,15 +23,31 @@ RSpec.describe ApiKeyPolicy do
   end
 
   permissions :create? do
-    it "grants create access to key owner" do
+    it "grants create access to key owner within tier limit" do
       expect(described_class).to permit(owner, ApiKey.new)
     end
 
-    it "grants create access to other members" do
+    it "grants create access to other members within tier limit" do
       expect(described_class).to permit(other_member, ApiKey.new)
     end
 
     it "grants create access to admins" do
+      expect(described_class).to permit(admin, ApiKey.new)
+    end
+
+    it "denies create when API key limit is reached" do
+      create(:api_key, user: other_member)
+      expect(described_class).not_to permit(other_member, ApiKey.new)
+    end
+
+    it "grants create when user has professional tier" do
+      create(:membership, :professional, user: other_member)
+      create(:api_key, user: other_member)
+      expect(described_class).to permit(other_member, ApiKey.new)
+    end
+
+    it "always grants create access to admins regardless of count" do
+      create_list(:api_key, 5, user: admin)
       expect(described_class).to permit(admin, ApiKey.new)
     end
   end

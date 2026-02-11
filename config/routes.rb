@@ -6,6 +6,11 @@ Rails.application.routes.draw do
 
   resources :sightings, only: %i[index show]
 
+  resources :memberships, only: %i[index show edit update]
+  resources :users, only: [] do
+    resources :memberships, only: %i[new create], controller: "memberships"
+  end
+
   resources :investigations do
     member do
       post :link_sighting
@@ -19,6 +24,7 @@ Rails.application.routes.draw do
       resources :sightings, only: %i[index show]
       resources :shapes, only: :index
       resources :investigations, only: %i[index show]
+      resource :membership, only: :show
     end
   end
 

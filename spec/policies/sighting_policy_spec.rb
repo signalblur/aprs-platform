@@ -41,12 +41,28 @@ RSpec.describe SightingPolicy do
       expect(described_class).to permit(admin, Sighting.new)
     end
 
-    it "grants create access to members" do
+    it "grants create access to members within tier limit" do
       expect(described_class).to permit(member, Sighting.new)
     end
 
-    it "grants create access to investigators" do
+    it "grants create access to investigators within tier limit" do
       expect(described_class).to permit(investigator, Sighting.new)
+    end
+
+    it "denies create access when monthly sighting limit is reached" do
+      create_list(:sighting, 5, submitter: member)
+      expect(described_class).not_to permit(member, Sighting.new)
+    end
+
+    it "grants create access when user has professional tier" do
+      create(:membership, :professional, user: member)
+      create_list(:sighting, 5, submitter: member)
+      expect(described_class).to permit(member, Sighting.new)
+    end
+
+    it "always grants create access to admins regardless of count" do
+      create_list(:sighting, 10, submitter: admin)
+      expect(described_class).to permit(admin, Sighting.new)
     end
   end
 

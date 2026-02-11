@@ -13,9 +13,14 @@ class ApiKeyPolicy < ApplicationPolicy
     true
   end
 
-  # @return [Boolean] true for all authenticated users
+  # Determines if the user can create a new API key.
+  #
+  # Checks tier-based API key count limit. Admins bypass all limits.
+  #
+  # @return [Boolean] true if within tier limit
   def create?
-    true
+    current_count = user.api_keys.where(active: true).count
+    user.within_tier_limit?(:api_keys, current_count)
   end
 
   # @return [Boolean] true if user is the key owner or an admin

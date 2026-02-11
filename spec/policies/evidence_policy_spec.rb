@@ -39,15 +39,35 @@ RSpec.describe EvidencePolicy do
 
   permissions :create? do
     it "grants create access to admins" do
-      expect(described_class).to permit(admin, Evidence.new)
+      expect(described_class).to permit(admin, Evidence.new(sighting: sighting))
     end
 
-    it "grants create access to members" do
+    it "grants create access to members within tier limit" do
+      expect(described_class).to permit(member, Evidence.new(sighting: sighting))
+    end
+
+    it "grants create access to investigators within tier limit" do
+      expect(described_class).to permit(investigator, Evidence.new(sighting: sighting))
+    end
+
+    it "grants create access when no sighting is set" do
       expect(described_class).to permit(member, Evidence.new)
     end
 
-    it "grants create access to investigators" do
-      expect(described_class).to permit(investigator, Evidence.new)
+    it "denies create when per-sighting evidence limit is reached" do
+      create_list(:evidence, 3, sighting: sighting, submitted_by: member)
+      expect(described_class).not_to permit(member, Evidence.new(sighting: sighting))
+    end
+
+    it "grants create when user has professional tier" do
+      create(:membership, :professional, user: member)
+      create_list(:evidence, 3, sighting: sighting, submitted_by: member)
+      expect(described_class).to permit(member, Evidence.new(sighting: sighting))
+    end
+
+    it "always grants create access to admins regardless of count" do
+      create_list(:evidence, 5, sighting: sighting, submitted_by: admin)
+      expect(described_class).to permit(admin, Evidence.new(sighting: sighting))
     end
   end
 

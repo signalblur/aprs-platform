@@ -21,9 +21,6 @@ gem "tailwindcss-rails"
 gem "devise"
 gem "pundit"
 
-# Payments
-gem "stripe"
-
 # Geospatial
 gem "rgeo"
 gem "rgeo-geojson"
@@ -53,6 +50,7 @@ gem "rack-attack"
 
 # Misc
 gem "bootsnap", require: false
+gem "ostruct"
 gem "tzinfo-data", platforms: %i[windows jruby]
 
 group :development, :test do

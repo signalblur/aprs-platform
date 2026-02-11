@@ -1,0 +1,95 @@
+<% content_for :title, "Membership — #{@membership.user.email} — APRS" %>
+
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <h1 class="text-2xl font-bold">Membership Details</h1>
+    <div class="flex gap-2">
+      <% if policy(@membership).update? %>
+        <%= link_to "Edit", edit_membership_path(@membership),
+              class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary/10 text-aprs-primary hover:bg-aprs-primary/20 border border-aprs-primary/20 transition-colors" %>
+        <%= link_to "New Membership", new_user_membership_path(@membership.user),
+              class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Current membership %>
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6 space-y-4">
+    <h2 class="text-lg font-semibold">Current Membership</h2>
+    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">User</dt>
+        <dd class="mt-1"><%= @membership.user.email %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Tier</dt>
+        <dd class="mt-1">
+          <% tier_colors = { "free" => "aprs-text-muted", "professional" => "aprs-primary", "organization" => "aprs-accent" } %>
+          <% tcolor = tier_colors[@membership.tier] || "aprs-text-muted" %>
+          <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-<%= tcolor %>/10 text-<%= tcolor %>">
+            <%= @membership.tier.capitalize %>
+          </span>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Status</dt>
+        <dd class="mt-1">
+          <% if @membership.active? %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-aprs-accent/10 text-aprs-accent">Active</span>
+          <% else %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-aprs-text-muted/10 text-aprs-text-muted">Inactive</span>
+          <% end %>
+        </dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Granted By</dt>
+        <dd class="mt-1 text-aprs-text-muted"><%= @membership.granted_by&.email || "System" %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Starts At</dt>
+        <dd class="mt-1 text-aprs-text-muted"><%= @membership.starts_at.strftime("%b %d, %Y %H:%M UTC") %></dd>
+      </div>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Expires At</dt>
+        <dd class="mt-1 text-aprs-text-muted"><%= @membership.expires_at&.strftime("%b %d, %Y %H:%M UTC") || "Never" %></dd>
+      </div>
+      <% if @membership.notes.present? %>
+        <div class="sm:col-span-2">
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Notes</dt>
+          <dd class="mt-1 text-aprs-text-muted"><%= @membership.notes %></dd>
+        </div>
+      <% end %>
+    </dl>
+  </div>
+
+  <%# Membership history (admin only) %>
+  <% if policy(Membership).index? && @membership_history.size > 1 %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6 space-y-4">
+      <h2 class="text-lg font-semibold">Membership History</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-aprs-border/30">
+              <th class="text-left py-2 px-3 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Tier</th>
+              <th class="text-left py-2 px-3 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Status</th>
+              <th class="text-left py-2 px-3 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Granted By</th>
+              <th class="text-left py-2 px-3 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Started</th>
+              <th class="text-left py-2 px-3 text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Expired</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-aprs-border/20">
+            <% @membership_history.each do |m| %>
+              <tr class="<%= m.id == @membership.id ? 'bg-aprs-primary/5' : '' %>">
+                <td class="py-2 px-3"><%= m.tier.capitalize %></td>
+                <td class="py-2 px-3"><%= m.active? ? 'Active' : 'Inactive' %></td>
+                <td class="py-2 px-3 text-aprs-text-muted"><%= m.granted_by&.email || "System" %></td>
+                <td class="py-2 px-3 text-aprs-text-muted text-xs"><%= m.starts_at.strftime("%b %d, %Y") %></td>
+                <td class="py-2 px-3 text-aprs-text-muted text-xs"><%= m.expires_at&.strftime("%b %d, %Y") || "Never" %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+</div>

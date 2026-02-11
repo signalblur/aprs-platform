@@ -38,7 +38,6 @@ module AprsPlatform
     # Filter sensitive parameters from logs
     config.filter_parameters += %i[
       password password_confirmation token api_key key secret
-      stripe stripe_customer_id stripe_subscription_id
     ]
 
     # Store times in UTC

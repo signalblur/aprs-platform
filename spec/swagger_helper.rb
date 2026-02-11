@@ -258,6 +258,29 @@ RSpec.configure do |config|
                 required: %w[description sightings]
               }
             ]
+          },
+          TierLimits: {
+            type: :object,
+            properties: {
+              sightings_per_month: { type: :integer, nullable: true, example: 5,
+                                     description: "Max sightings per month. Null = unlimited." },
+              evidence_per_sighting: { type: :integer, example: 3 },
+              evidence_max_size_mb: { type: :integer, example: 50 },
+              api_keys: { type: :integer, example: 1 }
+            },
+            required: %w[sightings_per_month evidence_per_sighting evidence_max_size_mb api_keys]
+          },
+          Membership: {
+            type: :object,
+            description: "Current user's membership tier and limits.",
+            properties: {
+              tier: { type: :string, enum: %w[free professional organization], example: "free" },
+              active: { type: :boolean, example: false },
+              starts_at: { type: :string, format: "date-time", nullable: true },
+              expires_at: { type: :string, format: "date-time", nullable: true },
+              limits: { "$ref": "#/components/schemas/TierLimits" }
+            },
+            required: %w[tier active limits]
           }
         }
       }

@@ -24,6 +24,11 @@ RSpec.describe User, type: :model do
 
     it { is_expected.to have_many(:assigned_investigations).class_name("Investigation").with_foreign_key(:assigned_investigator_id).dependent(:nullify).inverse_of(:assigned_investigator) }
     it { is_expected.to have_many(:investigation_notes).with_foreign_key(:author_id).dependent(:restrict_with_error).inverse_of(:author) }
+    it { is_expected.to have_many(:memberships).dependent(:destroy) }
+
+    it { is_expected.to have_one(:active_membership).class_name("Membership").inverse_of(:user) }
+
+    it { is_expected.to have_many(:granted_memberships).class_name("Membership").with_foreign_key(:granted_by_id).dependent(:nullify).inverse_of(:granted_by) }
   end
 
   describe "Devise modules" do

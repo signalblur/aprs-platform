@@ -19,9 +19,16 @@ class EvidencePolicy < ApplicationPolicy
     true
   end
 
-  # @return [Boolean] true for all authenticated users
+  # Determines if the user can create evidence.
+  #
+  # Checks tier-based per-sighting evidence count limit. Admins bypass all limits.
+  #
+  # @return [Boolean] true if within tier limit
   def create?
-    true
+    return true unless record.sighting
+
+    current_count = record.sighting.evidences.count
+    user.within_tier_limit?(:evidence_per_sighting, current_count)
   end
 
   # @return [Boolean] true if user is an admin or the evidence submitter

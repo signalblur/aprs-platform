@@ -79,7 +79,7 @@ bin/dev
 - Unified JSON structured logging via `Rails.logger`
 - No PII in logs
 - Specific exception classes, rescue specific exceptions
-- Filter sensitive params from logs (currently configured: password, password_confirmation, token, api_key, key, secret, stripe, stripe_customer_id, stripe_subscription_id). **TODO:** add PII filters: name, first_name, last_name, contact_info, phone, latitude, longitude
+- Filter sensitive params from logs (currently configured: password, password_confirmation, token, api_key, key, secret). **TODO:** add PII filters: name, first_name, last_name, contact_info, phone, latitude, longitude
 
 ## Security Non-Negotiables
 - Pundit `authorize` in EVERY controller action (enforced by `after_action :verify_authorized, except: :index`)
@@ -94,7 +94,6 @@ bin/dev
 - Devise: paranoid mode ON, password min 12 chars, lockable after 5 attempts, bcrypt stretches 12+
 - Web controllers MUST have CSRF protection enabled
 - API controllers (`Api::V1::BaseController < ActionController::API`) skip CSRF, authenticate via X-Api-Key header (SHA256 digest lookup). Always check `user.active_for_authentication?` after key lookup to enforce Devise lockable/confirmable controls.
-- **Future (Stripe — not yet implemented):** Stripe webhook must verify `Stripe-Signature`, store event IDs (idempotency), re-fetch data from API, use pessimistic locks on Membership updates. Never trust webhook payloads for authorization decisions.
 - No `skip_authorization` without documented justification
 
 ## PostGIS Conventions
@@ -118,11 +117,14 @@ bin/dev
 - `User` uses Devise modules: `database_authenticatable`, `registerable`, `recoverable`, `rememberable`, `validatable`, `trackable`, `lockable`, `confirmable`
 - Role enum: `member` (0, default), `investigator` (1), `admin` (2)
 - Pundit policies check `user.role` for role gates
-- **Future:** `Membership` model (Phase 1l) will add tier-based gating via `user.active_membership&.tier`
+- Tier system via `TierLimits` concern: `user.tier` returns "free"/"professional"/"organization"
+- Tiers are orthogonal to roles — roles control actions, tiers control volume/feature depth
+- No membership record = free tier. Only non-free tiers need explicit `Membership` records
+- `user.within_tier_limit?(:limit_name, current_count)` — admins bypass all limits
 
 ### Domain Model
-Core entity graph (Phase 1a–1i):
-- **User** → has_many :sightings (FK: `submitter_id`), has_many :evidences (FK: `submitted_by_id`) — both `dependent: :restrict_with_error`; has_many :api_keys (`dependent: :destroy`)
+Core entity graph (Phase 1a–1l):
+- **User** → has_many :sightings (FK: `submitter_id`), has_many :evidences (FK: `submitted_by_id`) — both `dependent: :restrict_with_error`; has_many :api_keys (`dependent: :destroy`); has_many :memberships (`dependent: :destroy`); has_one :active_membership; has_many :granted_memberships (FK: `granted_by_id`, `dependent: :nullify`)
 - **Shape** → has_many :sightings (`dependent: :restrict_with_error`) — 25 seeded UAP shape categories
 - **Sighting** → belongs_to :submitter (User, optional for anonymous), belongs_to :shape
   - has_many :physiological_effects, :psychological_effects, :equipment_effects, :environmental_traces, :evidences, :witnesses (all `dependent: :destroy`)
@@ -134,6 +136,7 @@ Core entity graph (Phase 1a–1i):
 - **Evidence** → belongs_to :sighting + :submitted_by (User), has_one_attached :file (Active Storage), evidence_type enum (photo/video/audio/document/other), file validations (content-type allowlist, magic byte verification, 100 MB size limit)
 - **Witness** → belongs_to :sighting, `encrypts :contact_info` (Active Record Encryption for PII), can be anonymous (nil name/contact_info)
 - **ApiKey** → belongs_to :user, SHA256-digested `key_digest` (unique), `key_prefix` (8 chars), `name`, `active`, `expires_at`, `last_used_at`
+- **Membership** → belongs_to :user, belongs_to :granted_by (User, optional). Tier enum: free(0), professional(1), organization(2). Partial unique index: one active per user. `starts_at` (timestamptz), `expires_at` (nullable), `active`, `notes`. Scopes: `active`, `current`
 
 ### Sighting Display (Phase 1h)
 - `SightingsController`: index (paginated list + filters + map) and show (detail + associations)
@@ -152,6 +155,14 @@ Core entity graph (Phase 1a–1i):
 - **Filters:** `SightingsFilterable` concern shared between web and API controllers
 - **PII gating:** Witness `contact_info` only included for investigator/admin (via `WitnessPolicy#show_contact_info?`)
 - **JSON envelope:** `{data: [...], meta: {page, per_page, total, total_pages}}`
+
+### Membership Tiers (Phase 1l)
+- **Admin-assigned tiers** — no payment integration. Stripe permanently removed.
+- **Tier limits:** `TierLimits` concern on User with `LIMITS` hash. Free: 5 sightings/mo, 3 evidence/sighting, 50 MB, 1 API key. Professional: 50/10/100 MB/5. Organization: unlimited/20/100 MB/20.
+- **Policy tier gating:** `SightingPolicy#create?`, `EvidencePolicy#create?`, `ApiKeyPolicy#create?` check tier limits. Admins bypass.
+- **Web:** `MembershipsController` — admin-only index/create/edit/update. Non-admins view own only. Create nested under users. Deactivates existing on new assignment.
+- **API:** `GET /api/v1/membership` (singular) — returns user's tier + limits hash. Always returns data (free defaults if no membership).
+- **Audit trail:** Tier changes create new memberships (old deactivated). `granted_by`, `notes`, `starts_at`, `expires_at`.
 
 ### Key Infrastructure
 - Background jobs: Solid Queue (DB-backed, no Redis); also Solid Cache + Solid Cable

@@ -1,0 +1,55 @@
+<%= form_with model: membership, url: form_url, class: "space-y-6" do |f| %>
+  <% if membership.errors.any? %>
+    <div class="rounded-lg bg-aprs-danger/10 border border-aprs-danger/30 px-4 py-3">
+      <h3 class="text-sm font-medium text-aprs-danger"><%= pluralize(membership.errors.count, "error") %> prevented this membership from being saved:</h3>
+      <ul class="mt-2 text-sm text-aprs-danger list-disc pl-5">
+        <% membership.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <% if show_tier_field %>
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Tier</label>
+      <%= f.select :tier,
+            options_for_select(Membership.tiers.keys.map { |t| [t.capitalize, t] }, membership.tier),
+            {},
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+    </div>
+  <% end %>
+
+  <div>
+    <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Notes</label>
+    <%= f.text_area :notes, rows: 3,
+          class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+          placeholder: "Admin justification for this membership assignment" %>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Starts At</label>
+      <%= f.datetime_local_field :starts_at,
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-aprs-text-muted uppercase tracking-wider mb-1">Expires At (optional)</label>
+      <%= f.datetime_local_field :expires_at,
+            class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+    </div>
+  </div>
+
+  <% unless show_tier_field %>
+    <div>
+      <label class="flex items-center gap-2">
+        <%= f.check_box :active, class: "rounded border-aprs-border/50" %>
+        <span class="text-sm">Active</span>
+      </label>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.submit class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors cursor-pointer" %>
+  </div>
+<% end %>
