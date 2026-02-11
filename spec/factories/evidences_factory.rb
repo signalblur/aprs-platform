@@ -23,6 +23,11 @@ FactoryBot.define do
       evidence_type { :other }
     end
 
+    trait :for_investigation do
+      sighting { nil }
+      investigation
+    end
+
     trait :with_file do
       after(:build) do |evidence|
         evidence.file.attach(

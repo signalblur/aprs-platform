@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_10_031157) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_10_222440) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "fuzzystrmatch"
   enable_extension "pg_catalog.plpgsql"
@@ -85,11 +85,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_031157) do
     t.datetime "created_at", null: false
     t.text "description"
     t.integer "evidence_type", default: 0, null: false
-    t.bigint "sighting_id", null: false
+    t.bigint "investigation_id"
+    t.bigint "sighting_id"
     t.bigint "submitted_by_id", null: false
     t.datetime "updated_at", null: false
+    t.index ["investigation_id"], name: "index_evidences_on_investigation_id"
     t.index ["sighting_id"], name: "index_evidences_on_sighting_id"
     t.index ["submitted_by_id"], name: "index_evidences_on_submitted_by_id"
+    t.check_constraint "sighting_id IS NOT NULL AND investigation_id IS NULL OR sighting_id IS NULL AND investigation_id IS NOT NULL", name: "evidence_parent_xor"
+  end
+
+  create_table "investigation_notes", force: :cascade do |t|
+    t.bigint "author_id", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.bigint "investigation_id", null: false
+    t.integer "note_type", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_id"], name: "index_investigation_notes_on_author_id"
+    t.index ["investigation_id"], name: "index_investigation_notes_on_investigation_id"
+  end
+
+  create_table "investigations", force: :cascade do |t|
+    t.bigint "assigned_investigator_id"
+    t.string "case_number", null: false
+    t.integer "classification"
+    t.timestamptz "closed_at"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.text "findings"
+    t.timestamptz "opened_at", null: false
+    t.integer "priority", default: 0, null: false
+    t.integer "status", default: 0, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["assigned_investigator_id"], name: "index_investigations_on_assigned_investigator_id"
+    t.index ["case_number"], name: "index_investigations_on_case_number", unique: true
+    t.index ["priority"], name: "index_investigations_on_priority"
+    t.index ["status"], name: "index_investigations_on_status"
   end
 
   create_table "physiological_effects", force: :cascade do |t|
@@ -129,6 +162,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_031157) do
     t.datetime "created_at", null: false
     t.text "description", null: false
     t.integer "duration_seconds"
+    t.bigint "investigation_id"
     t.geography "location", limit: {srid: 4326, type: "st_point", geographic: true}
     t.string "media_source"
     t.integer "num_witnesses", default: 1, null: false
@@ -140,6 +174,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_031157) do
     t.datetime "updated_at", null: false
     t.string "visibility_conditions"
     t.text "weather_notes"
+    t.index ["investigation_id"], name: "index_sightings_on_investigation_id"
     t.index ["location"], name: "index_sightings_on_location", using: :gist
     t.index ["observed_at"], name: "index_sightings_on_observed_at"
     t.index ["shape_id"], name: "index_sightings_on_shape_id"
@@ -191,10 +226,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_10_031157) do
   add_foreign_key "api_keys", "users"
   add_foreign_key "environmental_traces", "sightings"
   add_foreign_key "equipment_effects", "sightings"
+  add_foreign_key "evidences", "investigations"
   add_foreign_key "evidences", "sightings"
   add_foreign_key "evidences", "users", column: "submitted_by_id"
+  add_foreign_key "investigation_notes", "investigations"
+  add_foreign_key "investigation_notes", "users", column: "author_id"
+  add_foreign_key "investigations", "users", column: "assigned_investigator_id"
   add_foreign_key "physiological_effects", "sightings"
   add_foreign_key "psychological_effects", "sightings"
+  add_foreign_key "sightings", "investigations"
   add_foreign_key "sightings", "shapes"
   add_foreign_key "sightings", "users", column: "submitter_id"
   add_foreign_key "witnesses", "sightings"

@@ -102,6 +102,16 @@
           <dd class="mt-1 text-sm"><%= "%.6f" % @sighting.location.y %>, <%= "%.6f" % @sighting.location.x %></dd>
         </div>
       <% end %>
+
+      <% if @sighting.investigation %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Investigation</dt>
+          <dd class="mt-1 text-sm">
+            <%= link_to @sighting.investigation.case_number, investigation_path(@sighting.investigation),
+                  class: "text-aprs-primary hover:text-aprs-primary-hover transition-colors" %>
+          </dd>
+        </div>
+      <% end %>
     </dl>
   </div>
 

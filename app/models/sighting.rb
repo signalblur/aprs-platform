@@ -23,6 +23,7 @@
 class Sighting < ApplicationRecord
   belongs_to :submitter, class_name: "User", optional: true, inverse_of: :sightings
   belongs_to :shape
+  belongs_to :investigation, optional: true
 
   has_many :physiological_effects, dependent: :destroy
   has_many :psychological_effects, dependent: :destroy

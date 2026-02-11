@@ -1,0 +1,161 @@
+<% content_for :title, "#{@investigation.case_number} — APRS" %>
+
+<div class="space-y-6">
+  <%# Back link %>
+  <%= link_to investigations_path, class: "inline-flex items-center gap-1.5 text-sm text-aprs-text-muted hover:text-aprs-primary transition-colors" do %>
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+    </svg>
+    Back to Investigations
+  <% end %>
+
+  <%# Header %>
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
+      <div>
+        <p class="text-xs font-mono text-aprs-text-muted mb-1"><%= @investigation.case_number %></p>
+        <h1 class="text-xl font-bold"><%= @investigation.title %></h1>
+      </div>
+      <div class="flex items-center gap-2">
+        <% status_colors = { "open" => "aprs-accent", "in_progress" => "aprs-primary", "closed_resolved" => "aprs-accent", "closed_unresolved" => "aprs-warning", "closed_inconclusive" => "aprs-text-muted" } %>
+        <% color = status_colors[@investigation.status] || "aprs-text-muted" %>
+        <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-<%= color %>/10 text-<%= color %> border border-<%= color %>/20">
+          <%= @investigation.status.humanize %>
+        </span>
+        <% priority_colors = { "low" => "aprs-text-muted", "medium" => "aprs-primary", "high" => "aprs-warning", "critical" => "aprs-danger" } %>
+        <% pcolor = priority_colors[@investigation.priority] || "aprs-text-muted" %>
+        <span class="inline-flex items-center px-3 py-1 rounded-lg text-sm font-medium bg-<%= pcolor %>/10 text-<%= pcolor %> border border-<%= pcolor %>/20">
+          <%= @investigation.priority.capitalize %>
+        </span>
+      </div>
+    </div>
+
+    <% if @investigation.description.present? %>
+      <p class="text-aprs-text/90 leading-relaxed whitespace-pre-wrap mb-4"><%= @investigation.description %></p>
+    <% end %>
+
+    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Opened</dt>
+        <dd class="mt-1"><time datetime="<%= @investigation.opened_at.iso8601 %>"><%= @investigation.opened_at.strftime("%B %d, %Y") %></time></dd>
+      </div>
+      <% if @investigation.closed_at %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Closed</dt>
+          <dd class="mt-1"><time datetime="<%= @investigation.closed_at.iso8601 %>"><%= @investigation.closed_at.strftime("%B %d, %Y") %></time></dd>
+        </div>
+      <% end %>
+      <div>
+        <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Assigned To</dt>
+        <dd class="mt-1"><%= @investigation.assigned_investigator&.email || "Unassigned" %></dd>
+      </div>
+      <% if @investigation.classification %>
+        <div>
+          <dt class="text-xs font-medium text-aprs-text-muted uppercase tracking-wider">Classification</dt>
+          <dd class="mt-1"><%= @investigation.classification.humanize %></dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <% if policy(@investigation).update? %>
+      <div class="mt-4 flex gap-2">
+        <%= link_to "Edit", edit_investigation_path(@investigation),
+              class: "px-3 py-1.5 text-sm font-medium rounded-lg border border-aprs-border/50 text-aprs-text-muted hover:text-aprs-text hover:border-aprs-border transition-all" %>
+        <% if policy(@investigation).destroy? %>
+          <%= button_to "Delete", investigation_path(@investigation), method: :delete,
+                data: { turbo_confirm: "Are you sure you want to delete this investigation?" },
+                class: "px-3 py-1.5 text-sm font-medium rounded-lg border border-aprs-danger/30 text-aprs-danger hover:bg-aprs-danger/10 transition-all cursor-pointer" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Findings (gated) %>
+  <% if policy(@investigation).show_findings? && @investigation.findings.present? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Findings</h2>
+      <p class="text-aprs-text/90 leading-relaxed whitespace-pre-wrap"><%= @investigation.findings %></p>
+    </div>
+  <% end %>
+
+  <%# Linked Sightings %>
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+    <h2 class="text-lg font-semibold mb-4">Linked Sightings (<%= @investigation.sightings.count %>)</h2>
+    <% if @investigation.sightings.any? %>
+      <div class="space-y-3">
+        <% @investigation.sightings.includes(:shape).each do |sighting| %>
+          <div class="flex items-start justify-between gap-3 p-3 rounded-lg bg-aprs-bg/50 border border-aprs-border/20">
+            <div>
+              <%= link_to sighting_path(sighting), class: "text-aprs-primary hover:text-aprs-primary-hover text-sm font-medium transition-colors" do %>
+                Sighting #<%= sighting.id %> — <%= sighting.shape.name %>
+              <% end %>
+              <p class="text-xs text-aprs-text-muted mt-1"><%= sighting.description.truncate(100) %></p>
+            </div>
+            <% if policy(@investigation).link_sighting? %>
+              <%= button_to "Unlink", unlink_sighting_investigation_path(@investigation, sighting_id: sighting.id),
+                    method: :delete,
+                    class: "shrink-0 px-2 py-1 text-xs font-medium rounded border border-aprs-border/50 text-aprs-text-muted hover:text-aprs-danger hover:border-aprs-danger/30 transition-all cursor-pointer" %>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-aprs-text-muted">No sightings linked yet.</p>
+    <% end %>
+  </div>
+
+  <%# Notes (gated) %>
+  <% if policy(@investigation).show_findings? %>
+    <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6">
+      <h2 class="text-lg font-semibold mb-4">Investigation Notes</h2>
+      <% if @investigation.investigation_notes.any? %>
+        <div class="space-y-3">
+          <% @investigation.investigation_notes.order(created_at: :desc).each do |note| %>
+            <div class="p-4 rounded-lg bg-aprs-bg/50 border border-aprs-border/20">
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium"><%= note.author.email %></span>
+                  <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-aprs-primary/10 text-aprs-primary">
+                    <%= note.note_type.humanize %>
+                  </span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <time class="text-xs text-aprs-text-muted" datetime="<%= note.created_at.iso8601 %>">
+                    <%= note.created_at.strftime("%b %d, %Y %l:%M %p") %>
+                  </time>
+                  <% if policy(note).destroy? %>
+                    <%= button_to "Delete", investigation_note_path(@investigation, note),
+                          method: :delete,
+                          data: { turbo_confirm: "Delete this note?" },
+                          class: "text-xs text-aprs-danger hover:text-aprs-danger/80 transition-colors cursor-pointer" %>
+                  <% end %>
+                </div>
+              </div>
+              <p class="text-sm text-aprs-text/90 whitespace-pre-wrap"><%= note.content %></p>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="text-sm text-aprs-text-muted">No notes yet.</p>
+      <% end %>
+
+      <%# Add note form %>
+      <% if policy(InvestigationNote.new(investigation: @investigation)).create? %>
+        <div class="mt-4 pt-4 border-t border-aprs-border/30">
+          <%= form_with model: [investigation = @investigation, InvestigationNote.new], url: investigation_notes_path(@investigation), class: "space-y-3" do |f| %>
+            <div>
+              <%= f.select :note_type, InvestigationNote.note_types.keys.map { |t| [t.humanize, t] },
+                    {}, class: "rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+            </div>
+            <div>
+              <%= f.text_area :content, rows: 3, placeholder: "Add a note...",
+                    class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+            </div>
+            <%= f.submit "Add Note",
+                  class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors cursor-pointer" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

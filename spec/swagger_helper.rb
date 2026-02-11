@@ -205,6 +205,59 @@ RSpec.configure do |config|
                              environmental_traces evidences witnesses]
               }
             ]
+          },
+          InvestigationSummary: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              case_number: { type: :string, example: "APRS-20260210-0001" },
+              title: { type: :string },
+              status: { type: :string, enum: %w[open in_progress closed_resolved closed_unresolved closed_inconclusive] },
+              priority: { type: :string, enum: %w[low medium high critical] },
+              classification: { type: :string, nullable: true, enum: %w[identified unidentified insufficient_data hoax] },
+              assigned_investigator_id: { type: :integer, nullable: true },
+              sighting_count: { type: :integer },
+              opened_at: { type: :string, format: "date-time" },
+              closed_at: { type: :string, format: "date-time", nullable: true },
+              created_at: { type: :string, format: "date-time" },
+              updated_at: { type: :string, format: "date-time" }
+            },
+            required: %w[id case_number title status priority sighting_count opened_at created_at updated_at]
+          },
+          InvestigationNote: {
+            type: :object,
+            properties: {
+              id: { type: :integer },
+              note_type: { type: :string, enum: %w[general status_change assignment finding] },
+              content: { type: :string },
+              author_id: { type: :integer },
+              created_at: { type: :string, format: "date-time" }
+            },
+            required: %w[id note_type content author_id created_at]
+          },
+          InvestigationDetail: {
+            allOf: [
+              { "$ref": "#/components/schemas/InvestigationSummary" },
+              {
+                type: :object,
+                properties: {
+                  description: { type: :string, nullable: true },
+                  sightings: {
+                    type: :array, items: { "$ref": "#/components/schemas/SightingSummary" }
+                  },
+                  findings: {
+                    type: :string, nullable: true,
+                    description: "Only present for investigator/admin users."
+                  },
+                  notes: {
+                    type: :array,
+                    items: { "$ref": "#/components/schemas/InvestigationNote" },
+                    description: "Only present for investigator/admin users."
+                  }
+                },
+                required: %w[description sightings]
+              }
+            ]
           }
         }
       }

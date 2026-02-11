@@ -37,6 +37,10 @@
                     class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path == root_path ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
               <%= link_to "Sightings", sightings_path,
                     class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path.start_with?('/sightings') ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
+              <% if user_signed_in? %>
+                <%= link_to "Investigations", investigations_path,
+                      class: "px-3 py-2 rounded-lg text-sm font-medium transition-colors #{request.path.start_with?('/investigations') ? 'bg-aprs-primary/10 text-aprs-primary' : 'text-aprs-text-muted hover:text-aprs-text hover:bg-aprs-surface-elevated/50'}" %>
+              <% end %>
             </div>
           </div>
 

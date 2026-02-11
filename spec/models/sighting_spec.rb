@@ -32,6 +32,7 @@ RSpec.describe Sighting, type: :model do
   describe "associations" do
     it { is_expected.to belong_to(:submitter).class_name("User").optional }
     it { is_expected.to belong_to(:shape) }
+    it { is_expected.to belong_to(:investigation).optional }
     it { is_expected.to have_many(:physiological_effects).dependent(:destroy) }
     it { is_expected.to have_many(:psychological_effects).dependent(:destroy) }
     it { is_expected.to have_many(:equipment_effects).dependent(:destroy) }

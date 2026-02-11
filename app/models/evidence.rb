@@ -37,7 +37,8 @@ class Evidence < ApplicationRecord
     "application/pdf" => [ "%PDF".b ]
   }.freeze
 
-  belongs_to :sighting
+  belongs_to :sighting, optional: true
+  belongs_to :investigation, optional: true
   belongs_to :submitted_by, class_name: "User", inverse_of: :evidences
 
   has_one_attached :file
@@ -46,8 +47,23 @@ class Evidence < ApplicationRecord
        default: :photo, validate: true
 
   validate :acceptable_file, if: -> { file.attached? }
+  validate :exactly_one_parent
 
   private
+
+  # Validates that evidence belongs to exactly one parent (sighting XOR investigation).
+  #
+  # @return [void]
+  def exactly_one_parent
+    has_sighting = sighting_id.present? || sighting.present?
+    has_investigation = investigation_id.present? || investigation.present?
+
+    if has_sighting && has_investigation
+      errors.add(:base, "must belong to either a sighting or an investigation, not both")
+    elsif !has_sighting && !has_investigation
+      errors.add(:base, "must belong to either a sighting or an investigation")
+    end
+  end
 
   # Validates the attached file for content type, magic bytes, and size.
   #

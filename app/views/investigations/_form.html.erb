@@ -1,0 +1,83 @@
+<%= form_with model: investigation, class: "space-y-6" do |f| %>
+  <% if investigation.errors.any? %>
+    <div class="rounded-lg bg-aprs-danger/10 border border-aprs-danger/30 px-4 py-3">
+      <h3 class="text-sm font-medium text-aprs-danger mb-2"><%= pluralize(investigation.errors.count, "error") %> prevented this investigation from being saved:</h3>
+      <ul class="list-disc list-inside text-sm text-aprs-danger/80">
+        <% investigation.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="bg-aprs-surface rounded-xl border border-aprs-border/30 p-6 space-y-4">
+    <div>
+      <%= f.label :title, class: "block text-sm font-medium mb-1" %>
+      <%= f.text_field :title, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+            placeholder: "Investigation title (5-200 characters)" %>
+    </div>
+
+    <div>
+      <%= f.label :description, class: "block text-sm font-medium mb-1" %>
+      <%= f.text_area :description, rows: 4, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+            placeholder: "Optional description" %>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div>
+        <%= f.label :status, class: "block text-sm font-medium mb-1" %>
+        <%= f.select :status, Investigation.statuses.keys.map { |s| [s.humanize, s] },
+              {}, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+      </div>
+
+      <div>
+        <%= f.label :priority, class: "block text-sm font-medium mb-1" %>
+        <%= f.select :priority, Investigation.priorities.keys.map { |p| [p.capitalize, p] },
+              {}, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+      </div>
+
+      <div>
+        <%= f.label :classification, class: "block text-sm font-medium mb-1" %>
+        <%= f.select :classification, Investigation.classifications.keys.map { |c| [c.humanize, c] },
+              { include_blank: "Not classified" },
+              class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <%= f.label :assigned_investigator_id, "Assigned Investigator", class: "block text-sm font-medium mb-1" %>
+        <%= f.select :assigned_investigator_id,
+              User.where(role: [:investigator, :admin]).order(:email).map { |u| [u.email, u.id] },
+              { include_blank: "Unassigned" },
+              class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+      </div>
+
+      <div>
+        <%= f.label :opened_at, class: "block text-sm font-medium mb-1" %>
+        <%= f.datetime_local_field :opened_at, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+      </div>
+    </div>
+
+    <% if investigation.closed? || investigation.persisted? %>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <%= f.label :closed_at, class: "block text-sm font-medium mb-1" %>
+          <%= f.datetime_local_field :closed_at, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2" %>
+        </div>
+      </div>
+    <% end %>
+
+    <div>
+      <%= f.label :findings, class: "block text-sm font-medium mb-1" %>
+      <%= f.text_area :findings, rows: 6, class: "w-full rounded-lg border border-aprs-border/50 bg-aprs-bg text-sm px-3 py-2",
+            placeholder: "Final investigation findings and conclusions" %>
+    </div>
+  </div>
+
+  <div class="flex gap-3">
+    <%= f.submit class: "px-4 py-2 text-sm font-medium rounded-lg bg-aprs-primary hover:bg-aprs-primary-hover text-white transition-colors cursor-pointer" %>
+    <%= link_to "Cancel", investigation.persisted? ? investigation_path(investigation) : investigations_path,
+          class: "px-4 py-2 text-sm font-medium rounded-lg border border-aprs-border/50 text-aprs-text-muted hover:text-aprs-text transition-all" %>
+  </div>
+<% end %>

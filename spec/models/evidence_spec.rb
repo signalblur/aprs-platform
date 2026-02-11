@@ -38,7 +38,8 @@ RSpec.describe Evidence, type: :model do
   end
 
   describe "associations" do
-    it { is_expected.to belong_to(:sighting) }
+    it { is_expected.to belong_to(:sighting).optional }
+    it { is_expected.to belong_to(:investigation).optional }
     it { is_expected.to belong_to(:submitted_by).class_name("User") }
   end
 
@@ -182,8 +183,31 @@ RSpec.describe Evidence, type: :model do
     end
   end
 
+  describe "XOR parent validation" do
+    it "is valid with sighting and no investigation" do
+      expect(build(:evidence)).to be_valid
+    end
+
+    it "is valid with investigation and no sighting" do
+      expect(build(:evidence, :for_investigation)).to be_valid
+    end
+
+    it "is invalid with both sighting and investigation" do
+      evidence = build(:evidence, investigation: build(:investigation))
+      expect(evidence).not_to be_valid
+      expect(evidence.errors[:base]).to include("must belong to either a sighting or an investigation, not both")
+    end
+
+    it "is invalid with neither sighting nor investigation" do
+      evidence = build(:evidence, sighting: nil, investigation: nil)
+      expect(evidence).not_to be_valid
+      expect(evidence.errors[:base]).to include("must belong to either a sighting or an investigation")
+    end
+  end
+
   describe "database columns" do
-    it { is_expected.to have_db_column(:sighting_id).of_type(:integer).with_options(null: false) }
+    it { is_expected.to have_db_column(:sighting_id).of_type(:integer) }
+    it { is_expected.to have_db_column(:investigation_id).of_type(:integer) }
     it { is_expected.to have_db_column(:submitted_by_id).of_type(:integer).with_options(null: false) }
     it { is_expected.to have_db_column(:evidence_type).of_type(:integer).with_options(null: false) }
     it { is_expected.to have_db_column(:description).of_type(:text) }
@@ -193,6 +217,7 @@ RSpec.describe Evidence, type: :model do
 
   describe "database indexes" do
     it { is_expected.to have_db_index(:sighting_id) }
+    it { is_expected.to have_db_index(:investigation_id) }
     it { is_expected.to have_db_index(:submitted_by_id) }
   end
 end

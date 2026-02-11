@@ -1,6 +1,6 @@
 # Pipeline State
 
-No feature currently in progress. Phase 1h complete and ready to commit.
+No feature currently in progress. Phase 1k complete, ready for Phase 1l.
 
 ## Completed Phases
 - [x] Phase 0: Agent pipeline setup (8 agents, 5 skills, CLAUDE.md, pipeline-state.md)
@@ -132,10 +132,22 @@ No feature currently in progress. Phase 1h complete and ready to commit.
   - RuboCop exclusions for Rswag DSL patterns (DescribeClass, EmptyExampleGroup, VariableName, etc.)
   - 8 new specs (565 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
 
-## Next Phase: 1k (Investigation Management)
+- [x] Phase 1k: Investigation Management
+  - Investigation model: case_number (auto-generated APRS-YYYYMMDD-XXXX), title, description, status/priority/classification enums, findings, assigned_investigator FK, opened_at/closed_at timestamptz
+  - InvestigationNote model: nested notes with note_type enum (general/status_change/assignment/finding)
+  - Evidence M19 XOR constraint resolved: DB CHECK + model validation — evidence belongs to sighting XOR investigation
+  - Sighting → optional belongs_to :investigation
+  - InvestigationPolicy: member scoped to linked sightings, investigator/admin full access, findings gated
+  - InvestigationNotePolicy: investigator assigned only, admin full, member denied
+  - Web CRUD: InvestigationsController (full CRUD + link/unlink sighting), InvestigationNotesController (create/destroy)
+  - Views: index (paginated + filters), show (detail + notes timeline + findings gated), form, nav link
+  - API v1: read-only investigations endpoint with policy-gated findings/notes serialization
+  - Rswag: InvestigationSummary, InvestigationDetail, InvestigationNote schemas + integration specs
+  - 214 new specs (779 total), 100% line+branch coverage, RuboCop clean, Brakeman clean
+
+## Next Phase: 1l (Stripe Integration)
 
 ## Upcoming Phases
-- Phase 1k: Investigation management (case assign, status, audit)
 - Phase 1l: Stripe integration (payment, membership tiers, webhooks)
 - Phase 1m: Admin dashboard (Tailwind + Chartkick)
 

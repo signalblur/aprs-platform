@@ -43,6 +43,9 @@ bundle exec brakeman --no-pager
 # Dependency audit
 bundle exec bundler-audit check
 
+# Regenerate OpenAPI docs (Rswag)
+bundle exec rake rswag:specs:swaggerize
+
 # Start dev server
 bin/dev
 ```
@@ -90,7 +93,8 @@ bin/dev
 - Rate limit auth + submission endpoints
 - Devise: paranoid mode ON, password min 12 chars, lockable after 5 attempts, bcrypt stretches 12+
 - Web controllers MUST have CSRF protection enabled
-- **Future (Stripe/API — not yet implemented):** Stripe webhook must verify `Stripe-Signature`, store event IDs (idempotency), re-fetch data from API, use pessimistic locks on Membership updates. API controllers (`Api::V1::BaseController`) skip CSRF, authenticate via API key header. Never trust webhook payloads for authorization decisions.
+- API controllers (`Api::V1::BaseController < ActionController::API`) skip CSRF, authenticate via X-Api-Key header (SHA256 digest lookup). Always check `user.active_for_authentication?` after key lookup to enforce Devise lockable/confirmable controls.
+- **Future (Stripe — not yet implemented):** Stripe webhook must verify `Stripe-Signature`, store event IDs (idempotency), re-fetch data from API, use pessimistic locks on Membership updates. Never trust webhook payloads for authorization decisions.
 - No `skip_authorization` without documented justification
 
 ## PostGIS Conventions

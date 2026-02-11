@@ -6,10 +6,19 @@ Rails.application.routes.draw do
 
   resources :sightings, only: %i[index show]
 
+  resources :investigations do
+    member do
+      post :link_sighting
+      delete :unlink_sighting
+    end
+    resources :investigation_notes, only: %i[create destroy], as: :notes
+  end
+
   namespace :api do
     namespace :v1 do
       resources :sightings, only: %i[index show]
       resources :shapes, only: :index
+      resources :investigations, only: %i[index show]
     end
   end
 
