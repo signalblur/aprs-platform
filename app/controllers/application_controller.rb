@@ -16,8 +16,12 @@ class ApplicationController < ActionController::Base
   stale_when_importmap_changes
 
   before_action :authenticate_user!, unless: :devise_controller?
-  after_action :verify_authorized, except: :index, unless: :devise_controller?
-  after_action :verify_policy_scoped, only: :index, unless: :devise_controller?
+
+  # Use conditional procs instead of :only/:except to avoid
+  # raise_on_missing_callback_actions failures on Devise controllers
+  # (which don't define index and would fail the action existence check).
+  after_action :verify_authorized, unless: -> { devise_controller? || action_name == "index" }
+  after_action :verify_policy_scoped, if: -> { !devise_controller? && action_name == "index" }
 
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 

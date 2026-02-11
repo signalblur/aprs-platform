@@ -13,7 +13,12 @@ Rails.application.configure do
     policy.form_action :self
 
     # Scripts: self (importmap bundles, Chartkick), plus Leaflet from jspm CDN
-    policy.script_src  :self, "https://ga.jspm.io"
+    # blob: required for ES module shims (importmap) in development
+    if Rails.env.development?
+      policy.script_src :self, :unsafe_inline, "https://ga.jspm.io", :blob
+    else
+      policy.script_src :self, "https://ga.jspm.io"
+    end
 
     # Styles: self (Tailwind), plus Leaflet CSS from unpkg CDN
     # unsafe-inline needed for Chartkick/Chart.js inline styles and Leaflet marker styles
